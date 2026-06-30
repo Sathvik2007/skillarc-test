@@ -1,15 +1,16 @@
 import type { UserProfile } from "@/modules/users/types"
 
 export interface Faculty extends UserProfile {
-  id: string
-  name: string
-  email: string
-  role: string
+  department_id?: string | null
 }
 
 export interface FacultyWithStats extends Faculty {
   assignedSubjects?: number
   assignedSections?: number
+  department?: {
+    id: string
+    name: string
+  } | null
 }
 
 export interface CreateFacultyInput {

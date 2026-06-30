@@ -24,13 +24,19 @@ export default async function TimetablePage() {
 
   const institutionId = profile.institution_id
 
-  const { data: programs = [] } = await supabase
-    .from("programs")
+  const { data: departmentsData } = await supabase
+    .from("departments")
     .select("id, name")
     .eq("institution_id", institutionId)
     .order("name")
 
-  const { data: sections = [] } = await supabase
+  const { data: programsData } = await supabase
+    .from("programs")
+    .select("id, name, department_id")
+    .eq("institution_id", institutionId)
+    .order("name")
+
+  const { data: sectionsData } = await supabase
     .from("sections")
     .select("id, name, semester, program_id")
     .eq("institution_id", institutionId)
@@ -39,8 +45,9 @@ export default async function TimetablePage() {
 
   return (
     <TimetableClientPage
-      programs={programs}
-      sections={sections}
+      departments={departmentsData ?? []}
+      programs={programsData ?? []}
+      sections={sectionsData ?? []}
     />
   )
 }

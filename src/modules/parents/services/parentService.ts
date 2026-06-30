@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Parent, CreateParentInput, UpdateParentInput } from "./types/parent.types"
+import type { Parent, CreateParentInput, UpdateParentInput } from "../types/parent.types"
 import { ROLES } from "@/constants/roles"
 
 export async function createSupabaseParentClient() {

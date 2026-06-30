@@ -27,11 +27,11 @@ function barColor(used: number, total: number) {
 export default function FacultyPanel() {
   const { faculty, slots, loading } = useTimetable()
 
-  // Count how many slots each faculty member has been assigned
+  // Count assigned slots per faculty directly from the slot's own faculty_id
   const usageMap: Record<string, number> = {}
   slots.forEach((slot) => {
-    if (slot.subject?.faculty_id) {
-      usageMap[slot.subject.faculty_id] = (usageMap[slot.subject.faculty_id] ?? 0) + 1
+    if (slot.faculty_id) {
+      usageMap[slot.faculty_id] = (usageMap[slot.faculty_id] ?? 0) + 1
     }
   })
 
@@ -61,11 +61,11 @@ export default function FacultyPanel() {
         {loading ? (
           <p style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", marginTop: 24 }}>Loading…</p>
         ) : faculty.map((f) => {
-          const used = usageMap[f.id] ?? 0
+          const used  = usageMap[f.id] ?? 0
           const total = f.total ?? 5
           const status = getStatus(used, total)
-          const sc = STATUS[status]
-          const bc = barColor(used, total)
+          const sc  = STATUS[status]
+          const bc  = barColor(used, total)
           const pct = Math.min(Math.round((used / total) * 100), 100)
           const initials = f.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()
 

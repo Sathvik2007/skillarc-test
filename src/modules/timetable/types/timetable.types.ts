@@ -3,11 +3,12 @@ export interface Subject {
   code: string
   name: string
   semester: number
-  section_id: string | null
-  faculty_id: string
-  faculty_name?: string
   institution_id: string
-  program_id?: string
+  program_id: string | null
+  credits?: number
+  subject_type?: string
+  faculty_id?: string | null
+  faculty_name?: string | null
 }
 
 export interface Faculty {
@@ -23,24 +24,27 @@ export interface Section {
   id: string
   name: string
   semester: number
-  program_id?: string
-  institution_id?: string
-}
-
-export interface TimeTableSlot {
-  id?: string
-  day: string
-  period: string
-  subject?: Subject
-  section_id: string | null
-  subject_id: string | null
-  created_at?: string
-  updated_at?: string
+  program_id: string | null
+  institution_id: string | null
 }
 
 export interface Slot {
   day: string
   period: string
+  faculty_id: string | null
+  faculty_name?: string | null
   subject?: Subject
-  section?: Section
+}
+
+export interface TimetableSlot {
+  id?: string
+  day: string
+  period: number
+  institution_id: string
+  section_id: string
+  semester: number
+  subject_id: string | null
+  faculty_id: string | null
+  created_at?: string
+  updated_at?: string
 }

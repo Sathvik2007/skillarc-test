@@ -1,5 +1,3 @@
-// app/dashboard/super-admin/organizations/page.tsx
-
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import OrganizationsClient from "./organizations-client"
 import { createOrganization, deleteOrganization, editOrganization } from "../actions"
@@ -7,7 +5,6 @@ import { createOrganization, deleteOrganization, editOrganization } from "../act
 export default async function OrganizationsPage() {
   const supabase = await createSupabaseServerClient()
 
-  // Query 1: orgs with institution counts
   const { data: organizationsRaw, error: orgError } = await supabase
     .from("organizations")
     .select(`
@@ -20,7 +17,6 @@ export default async function OrganizationsPage() {
 
   if (orgError) console.error("Org fetch error:", orgError.message, orgError.details, orgError.hint)
 
-  // Query 2: admin counts per org — adjust table + column names to match yours
   const { data: adminCounts, error: adminError } = await supabase
     .from("profiles")
     .select("organization_id")
@@ -31,7 +27,6 @@ export default async function OrganizationsPage() {
   console.log("organizationsRaw:", JSON.stringify(organizationsRaw, null, 2))
   console.log("adminCounts:", JSON.stringify(adminCounts, null, 2))
 
-  // Build a map: org_id → admin count
   const adminCountMap: Record<string, number> = {}
   for (const row of adminCounts ?? []) {
     if (row.organization_id) {
@@ -51,7 +46,7 @@ export default async function OrganizationsPage() {
   return (
     <OrganizationsClient
       organizations={organizations}
-      onCreateOrg={createOrganization}
+      onCreateOrg={(name) => createOrganization({ name })}
       onDeleteOrg={deleteOrganization}
       onEditOrg={editOrganization}
     />

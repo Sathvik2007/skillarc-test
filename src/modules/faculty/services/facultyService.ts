@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Faculty, FacultyWithStats, CreateFacultyInput, UpdateFacultyInput } from "./types/faculty.types"
+import type { Faculty, FacultyWithStats, CreateFacultyInput, UpdateFacultyInput } from "../types/faculty.types"
 import { ROLES } from "@/constants/roles"
 
 export async function createSupabaseFacultyClient() {
@@ -42,14 +42,20 @@ export async function getFacultyByDepartment(
   departmentId: string
 ): Promise<Faculty[]> {
   const supabase = await createSupabaseFacultyClient()
+
   const { data, error } = await supabase
     .from("departments_hierarchy")
     .select("users:user_id(id, name, email, role, institution_id, organization_id)")
     .eq("department_id", departmentId)
     .eq("role", ROLES.HOD)
 
-  if (error) throw new Error(`Failed to fetch department faculty: ${error.message}`)
-  return (data?.map((d) => d.users) || []).filter(Boolean)
+  if (error) {
+    throw new Error(`Failed to fetch department faculty: ${error.message}`)
+  }
+
+  const faculty = data?.flatMap((row: any) => row.users ?? []) ?? []
+
+  return faculty as Faculty[]
 }
 
 export async function getFacultyById(facultyId: string): Promise<Faculty> {
@@ -66,17 +72,15 @@ export async function getFacultyById(facultyId: string): Promise<Faculty> {
 
 export async function createFaculty(input: CreateFacultyInput): Promise<Faculty> {
   const supabase = await createSupabaseFacultyClient()
-  
-  // First create the user
+
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
     email: input.email,
-    password: Math.random().toString(36).slice(-12), // Temporary password
+    password: Math.random().toString(36).slice(-12),
     email_confirm: true,
   })
 
   if (authError) throw new Error(`Failed to create auth user: ${authError.message}`)
 
-  // Then create the user profile
   const { data: faculty, error } = await supabase
     .from("users")
     .insert([
@@ -94,7 +98,6 @@ export async function createFaculty(input: CreateFacultyInput): Promise<Faculty>
 
   if (error) throw new Error(`Failed to create faculty profile: ${error.message}`)
 
-  // Assign to department if provided
   if (input.department_id) {
     await supabase.from("departments_hierarchy").insert([
       {
@@ -128,7 +131,6 @@ export async function updateFaculty(
 export async function deleteFaculty(facultyId: string): Promise<void> {
   const supabase = await createSupabaseFacultyClient()
 
-  // Delete from users
   const { error: deleteError } = await supabase
     .from("users")
     .delete()
@@ -137,7 +139,6 @@ export async function deleteFaculty(facultyId: string): Promise<void> {
   if (deleteError)
     throw new Error(`Failed to delete faculty: ${deleteError.message}`)
 
-  // Delete from auth
   try {
     await supabase.auth.admin.deleteUser(facultyId)
   } catch (e) {
@@ -173,10 +174,12 @@ export async function getFacultyWithStats(
     .order("name")
 
   if (error) throw new Error(`Failed to fetch faculty with stats: ${error.message}`)
-  
-  return (data || []).map((faculty) => ({
-    ...faculty,
-    assignedSubjects: faculty.subjects?.[0]?.count || 0,
-    assignedSections: faculty.sections?.[0]?.count || 0,
-  }))
+
+  const rows = (data ?? []) as any[]
+
+  return rows.map((faculty) => ({
+    ...(faculty as Faculty),
+    assignedSubjects: faculty.subjects?.[0]?.count ?? 0,
+    assignedSections: faculty.sections?.[0]?.count ?? 0,
+  })) as FacultyWithStats[]
 }

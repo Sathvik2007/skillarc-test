@@ -1,16 +1,21 @@
 "use client"
 
-import { useMemo, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useEffect, useMemo, useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Layers, CalendarDays, Users2, Check, ChevronDown, CalendarRange } from "lucide-react"
 
 const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
 
+interface Department {
+  id: string
+  name: string
+}
 interface Program {
   id: string
   name: string
+  department_id?: string | null
 }
 interface Section {
   id: string
@@ -19,6 +24,7 @@ interface Section {
   program_id: string
 }
 interface Props {
+  departments: Department[]
   programs: Program[]
   sections: Section[]
 }
@@ -180,11 +186,37 @@ function FlowSelect({
   )
 }
 
-export function TimetableSelector({ programs, sections }: Props) {
+export function TimetableSelector({ departments, programs, sections }: Props) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  const [selectedDepartment, setSelectedDepartment] = useState("")
   const [selectedProgram, setSelectedProgram] = useState("")
   const [selectedSemester, setSelectedSemester] = useState("")
   const [selectedSection, setSelectedSection] = useState("")
+
+  useEffect(() => {
+    const queryDepartment = searchParams.get("department") ?? ""
+    const queryProgram = searchParams.get("program") ?? ""
+    const querySemester = searchParams.get("semester") ?? ""
+    const querySection = searchParams.get("section") ?? ""
+
+    let department = queryDepartment
+    if (!department && queryProgram) {
+      const program = programs.find((p) => p.id === queryProgram)
+      department = program?.department_id ?? ""
+    }
+
+    setSelectedDepartment(department)
+    setSelectedProgram(queryProgram)
+    setSelectedSemester(querySemester)
+    setSelectedSection(querySection)
+  }, [searchParams, programs])
+
+  const availablePrograms = useMemo(() => {
+    if (!selectedDepartment) return programs
+    return programs.filter((p) => p.department_id === selectedDepartment)
+  }, [programs, selectedDepartment])
 
   const semesters = useMemo(() => {
     if (!selectedProgram) return []
@@ -200,10 +232,11 @@ export function TimetableSelector({ programs, sections }: Props) {
     )
   }, [selectedProgram, selectedSemester, sections])
 
+  const departmentName = departments.find((d) => d.id === selectedDepartment)?.name
   const programName = programs.find((p) => p.id === selectedProgram)?.name
   const sectionName = availableSections.find((s) => s.id === selectedSection)?.name
 
-  const canBuild = Boolean(selectedProgram && selectedSemester && selectedSection)
+  const canBuild = Boolean(selectedDepartment && selectedProgram && selectedSemester && selectedSection)
 
   return (
     <Card
@@ -249,20 +282,46 @@ export function TimetableSelector({ programs, sections }: Props) {
       <div style={{ padding: "22px 24px 6px" }}>
         <StepRow
           index={1}
-          state={selectedProgram ? "done" : "active"}
+          state={selectedDepartment ? "done" : "active"}
+          icon={<Layers size={14} />}
+          label="Department"
+        >
+          <FlowSelect
+            value={selectedDepartment}
+            placeholder="Select a department"
+            onChange={(v) => {
+              setSelectedDepartment(v)
+              setSelectedProgram("")
+              setSelectedSemester("")
+              setSelectedSection("")
+            }}
+          >
+            {departments.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
+            ))}
+          </FlowSelect>
+        </StepRow>
+
+        <StepRow
+          index={2}
+          state={!selectedDepartment ? "locked" : selectedProgram ? "done" : "active"}
           icon={<Layers size={14} />}
           label="Program"
         >
           <FlowSelect
             value={selectedProgram}
             placeholder="Select a program"
+            disabled={!selectedDepartment}
+            lockedHint="Choose a department first"
             onChange={(v) => {
               setSelectedProgram(v)
               setSelectedSemester("")
               setSelectedSection("")
             }}
           >
-            {programs.map((p) => (
+            {availablePrograms.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
               </option>
@@ -271,7 +330,7 @@ export function TimetableSelector({ programs, sections }: Props) {
         </StepRow>
 
         <StepRow
-          index={2}
+          index={3}
           state={!selectedProgram ? "locked" : selectedSemester ? "done" : "active"}
           icon={<CalendarDays size={14} />}
           label="Semester"
@@ -295,7 +354,7 @@ export function TimetableSelector({ programs, sections }: Props) {
         </StepRow>
 
         <StepRow
-          index={3}
+          index={4}
           state={!selectedSemester ? "locked" : selectedSection ? "done" : "active"}
           icon={<Users2 size={14} />}
           label="Section"
@@ -336,7 +395,9 @@ export function TimetableSelector({ programs, sections }: Props) {
               border: "1px solid #f1f1f3",
             }}
           >
-            <span style={{ color: "#4f46e5" }}>{programName}</span>
+            <span style={{ color: "#4f46e5" }}>{departmentName}</span>
+            <span style={{ color: "#d1d5db" }}>/</span>
+            <span>{programName}</span>
             <span style={{ color: "#d1d5db" }}>/</span>
             <span>Semester {selectedSemester}</span>
             <span style={{ color: "#d1d5db" }}>/</span>
@@ -348,7 +409,7 @@ export function TimetableSelector({ programs, sections }: Props) {
           disabled={!canBuild}
           onClick={() =>
             router.push(
-              `/dashboard/institution-admin/timetable/builder?program=${selectedProgram}&semester=${selectedSemester}&section=${selectedSection}`
+              `/dashboard/institution-admin/timetable/builder?department=${selectedDepartment}&program=${selectedProgram}&semester=${selectedSemester}&section=${selectedSection}`
             )
           }
           style={{

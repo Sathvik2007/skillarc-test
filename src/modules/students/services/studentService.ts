@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Student, StudentWithSection, CreateStudentInput, UpdateStudentInput } from "./types/student.types"
+import type { Student, StudentWithSection, CreateStudentInput, UpdateStudentInput } from "../types/student.types"
 import { ROLES } from "@/constants/roles"
 
 export async function createSupabaseStudentClient() {

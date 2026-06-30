@@ -134,7 +134,7 @@ export function CreateSectionDialog({
               <Label htmlFor="program">Program *</Label>
               <select
                 id="program"
-                value={formData.program_id}
+                value={formData.program_id ?? ""}
                 onChange={(e) =>
                   setFormData({ ...formData, program_id: e.target.value })
                 }
@@ -155,7 +155,7 @@ export function CreateSectionDialog({
             <Label htmlFor="advisor">Faculty Advisor</Label>
             <select
               id="advisor"
-              value={formData.faculty_advisor_id || ""}
+              value={formData.faculty_advisor_id ?? ""}
               onChange={(e) =>
                 setFormData({
                   ...formData,

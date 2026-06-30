@@ -1,5 +1,4 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
-import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
 
@@ -55,7 +54,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createSupabaseServerClient()
-    const supabaseAdmin = createSupabaseAdminClient()
 
     const {
       data: { user },
@@ -64,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from("users")
-      .select("role, institution_id")
+      .select("role, institution_id, organization_id")
       .eq("id", user.id)
       .single()
 
@@ -73,7 +71,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { name, email, password, section_id, semester, program_id, institution_id } = body
+    const { name, email, section_id, semester, program_id, institution_id } = body
 
     if (!name || !email || !section_id || !semester || !institution_id) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
@@ -83,29 +81,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { data: authData, error: authError } =
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: password || Math.random().toString(36).slice(-12),
-        email_confirm: true,
-      })
+    const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
 
-    if (authError) throw authError
+    const inviteResponse = await fetch(`${origin}/api/invite-user`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        role: ROLES.STUDENT,
+        institutionId: institution_id,
+        organizationId: profile.organization_id,
+      }),
+    })
+
+    if (!inviteResponse.ok) {
+      const err = await inviteResponse.json().catch(() => ({}))
+      throw new Error(err.error || "Failed to send invite")
+    }
+
+    const { data: invitedUser, error: invitedUserError } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", email)
+      .single()
+
+    if (invitedUserError || !invitedUser) {
+      throw new Error("Student invite was created but profile lookup failed")
+    }
 
     const { data: student, error } = await supabase
       .from("users")
-      .insert([
-        {
-          id: authData.user.id,
-          name,
-          email,
-          role: ROLES.STUDENT,
-          institution_id,
-          section_id,
-          semester,
-          program_id: program_id || null,
-        },
-      ])
+      .update({
+        name,
+        role: ROLES.STUDENT,
+        institution_id,
+        section_id,
+        semester,
+        program_id: program_id || null,
+      })
+      .eq("id", invitedUser.id)
       .select(STUDENT_SELECT)
       .single()
 

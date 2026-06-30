@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { ParentStudentRelation, ParentStudentRelationWithDetails, CreateParentStudentRelationInput } from "./types/parent-student.types"
+import type { ParentStudentRelation, ParentStudentRelationWithDetails, CreateParentStudentRelationInput } from "../types/parent-student.types"
 
 export async function createSupabaseParentStudentClient() {
   const cookieStore = await cookies()

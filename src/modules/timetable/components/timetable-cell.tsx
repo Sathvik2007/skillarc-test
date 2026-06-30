@@ -22,14 +22,13 @@ export default function TimetableCell({ day, period }: { day: string; period: st
   const [hovered, setHovered] = useState(false)
 
   const assigned = slots.find((s: any) => s.day === day && s.period === period)
-  const c = assigned ? (COLORS[assigned.subject?.code] ?? DEFAULT) : DEFAULT
-  const isLab = assigned?.subject?.type === "LAB"
+  const assignedSubject = assigned?.subject
+  const c = COLORS[assignedSubject?.code ?? ""] ?? DEFAULT
+  const isLab = assignedSubject?.subject_type === "LAB"
 
   async function handleClear() {
-    // Clear from UI immediately
     assignSubject(day, period, undefined)
 
-    // Delete from Supabase
     const { error } = await supabase
       .from("timetable_slots")
       .delete()
@@ -41,7 +40,7 @@ export default function TimetableCell({ day, period }: { day: string; period: st
   }
 
   const emptyStyle = isOver
-    ? { backgroundColor: "#eef2ff", borderColor: "#818cf8", borderStyle: "dashed" as const, borderWidth: 2, transform: "scale(1.02)" }
+    ? { backgroundColor: "#eef2ff", borderColor: "#818cf8", borderStyle: "dashed" as const, borderWidth: 2, transform: "scale(1.02)"}
     : { backgroundColor: "rgba(255,255,255,0.7)", borderColor: "#e5e7eb", borderStyle: "dashed" as const, borderWidth: 1.5 }
 
   return (
@@ -68,10 +67,10 @@ export default function TimetableCell({ day, period }: { day: string; period: st
           <div style={{ height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "8px 10px" }}>
             <div>
               <p style={{ fontWeight: 700, fontSize: 12, color: c.text, lineHeight: 1.2 }}>
-                {assigned.subject.code}
+                {assignedSubject?.code}
               </p>
               <p style={{ fontSize: 10, color: c.sub, marginTop: 2, lineHeight: 1.3 }}>
-                {assigned.subject.faculty_name ?? assigned.subject.faculty}
+                {assignedSubject?.faculty_name ?? ""}
               </p>
             </div>
             {isLab && (
@@ -93,7 +92,6 @@ export default function TimetableCell({ day, period }: { day: string; period: st
             )}
           </div>
 
-          {/* ✕ clear button — visible on hover */}
           {hovered && (
             <button
               onClick={handleClear}
@@ -123,7 +121,7 @@ export default function TimetableCell({ day, period }: { day: string; period: st
           )}
         </>
       ) : isOver ? (
-        <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 4 }}>
+        <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap:4 }}>
           <div style={{ width: 20, height: 20, borderRadius: "50%", backgroundColor: "#c7d2fe", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ fontSize: 14, color: "#6366f1", lineHeight: 1 }}>+</span>
           </div>

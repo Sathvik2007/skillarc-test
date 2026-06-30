@@ -38,15 +38,7 @@ export default function TimetableGrid() {
           <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Drag subjects from the sidebar into the grid</p>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
-          {["Year II", "Sem IV", "Sec A"].map((opt) => (
-            <select key={opt} style={{
-              fontSize: 11, fontWeight: 600, color: "#374151",
-              backgroundColor: "#f3f4f6", border: "none", borderRadius: 8,
-              padding: "5px 10px", cursor: "pointer", outline: "none",
-            }}>
-              <option>{opt}</option>
-            </select>
-          ))}
+          {/* placeholder dropdowns removed because the selector flow controls program/semester/section */}
         </div>
       </div>
 

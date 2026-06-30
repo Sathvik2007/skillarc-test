@@ -24,7 +24,7 @@ export default async function ProgramsPage() {
 
   const institutionId = profile.institution_id
 
-  const { data: programs = [] } = await supabase
+  const { data: programsData } = await supabase
     .from("programs")
     .select(`
       *,
@@ -36,11 +36,15 @@ export default async function ProgramsPage() {
     .eq("institution_id", institutionId)
     .order("name")
 
-  const { data: departments = [] } = await supabase
+  const programs = programsData ?? []
+
+  const { data: departmentsData } = await supabase
     .from("departments")
     .select("id,name")
     .eq("institution_id", institutionId)
     .order("name")
+
+  const departments = departmentsData ?? []
 
   return (
     <ProgramsClientPage

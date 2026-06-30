@@ -1,20 +1,56 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { useTimetable } from "../context/timetable-context"
 import SubjectCard from "./subject-card"
+import { supabase } from "@/lib/supabase"
 
 const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
 
 export default function SubjectPanel() {
   const { subjects, loading } = useTimetable()
+  const searchParams = useSearchParams()
   const [query, setQuery] = useState("")
+  const [sectionName, setSectionName] = useState<string | null>(null)
+
+  const semester = searchParams.get("semester")
+  const sectionId = searchParams.get("section")
+
+  useEffect(() => {
+    let active = true
+
+    async function loadSectionName() {
+      if (!sectionId) {
+        if (active) setSectionName(null)
+        return
+      }
+
+      const { data } = await supabase
+        .from("sections")
+        .select("name")
+        .eq("id", sectionId)
+        .single()
+
+      if (active) setSectionName(data?.name ?? null)
+    }
+
+    loadSectionName()
+
+    return () => {
+      active = false
+    }
+  }, [sectionId])
 
   const filtered = subjects.filter(
     (s) =>
       s.code.toLowerCase().includes(query.toLowerCase()) ||
       s.name.toLowerCase().includes(query.toLowerCase())
   )
+
+  const subtitle = semester || sectionId
+    ? `${semester ? `Semester ${semester}` : "Semester"}${sectionName ? ` · Section ${sectionName}` : sectionId ? " · Section selected" : ""}`
+    : "Select a section"
 
   return (
     <div style={{
@@ -28,7 +64,7 @@ export default function SubjectPanel() {
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 10 }}>
           <div>
             <p style={{ fontWeight: 700, fontSize: 13, color: "#111827" }}>Subjects</p>
-            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Sem IV · Section A</p>
+            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>{subtitle}</p>
           </div>
           <span style={{
             fontSize: 10, fontWeight: 600, color: "#6b7280",

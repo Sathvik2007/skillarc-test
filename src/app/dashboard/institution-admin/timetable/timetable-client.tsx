@@ -2,9 +2,15 @@
 
 import { TimetableSelector } from "@/components/timetable/timetable-selector"
 
+interface Department {
+  id: string
+  name: string
+}
+
 interface Program {
   id: string
   name: string
+  department_id?: string | null
 }
 
 interface Section {
@@ -15,11 +21,13 @@ interface Section {
 }
 
 interface Props {
+  departments: Department[]
   programs: Program[]
   sections: Section[]
 }
 
 export function TimetableClientPage({
+  departments,
   programs,
   sections,
 }: Props) {
@@ -36,6 +44,7 @@ export function TimetableClientPage({
       </div>
 
       <TimetableSelector
+        departments={departments}
         programs={programs}
         sections={sections}
       />

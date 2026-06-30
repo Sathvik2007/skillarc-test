@@ -51,7 +51,7 @@ export function CreateParentDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!formData.name || (!parent && !formData.email)) {
+    if (!formData.name || (!parent && !(formData as CreateParentInput).email)) {
       toast({
         title: "Error",
         description: "Name and email are required",
@@ -112,7 +112,7 @@ export function CreateParentDialog({
                 id="email"
                 type="email"
                 placeholder="parent@example.com"
-                value={formData.email}
+                value={(formData as CreateParentInput).email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
               />

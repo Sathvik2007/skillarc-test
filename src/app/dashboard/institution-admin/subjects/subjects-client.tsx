@@ -10,9 +10,8 @@ import { useToast } from "@/components/ui/use-toast"
 
 export function SubjectsClientPage({
   initialSubjects,
+  departments,
   programs,
-  sections,
-  faculty,
   institutionId,
 }: any) {
   const [subjects, setSubjects] = useState(initialSubjects)
@@ -42,9 +41,7 @@ export function SubjectsClientPage({
     }
 
     const subject = await res.json()
-
     setSubjects((prev: any) => [...prev, subject])
-
     setOpen(false)
 
     toast({
@@ -69,13 +66,8 @@ export function SubjectsClientPage({
     <div className="space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Subjects
-          </h1>
-
-          <p className="text-gray-500">
-            Manage academic subjects
-          </p>
+          <h1 className="text-3xl font-bold">Subjects</h1>
+          <p className="text-gray-500">Manage academic subjects</p>
         </div>
 
         <Button onClick={() => setOpen(true)}>
@@ -95,9 +87,8 @@ export function SubjectsClientPage({
         open={open}
         onOpenChange={setOpen}
         onSubmit={handleCreate}
+        departments={departments}
         programs={programs}
-        sections={sections}
-        faculty={faculty}
       />
     </div>
   )

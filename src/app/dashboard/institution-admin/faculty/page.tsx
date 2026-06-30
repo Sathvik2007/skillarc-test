@@ -13,7 +13,7 @@ export default async function FacultyPage() {
 
   const { data: userProfile } = await supabase
     .from("users")
-    .select("*")
+    .select("role, institution_id")
     .eq("id", user.id)
     .single()
 
@@ -23,8 +23,7 @@ export default async function FacultyPage() {
 
   const institutionId = userProfile.institution_id
 
-  // Fetch faculty with department name joined
-  const { data: faculty = [] } = await supabase
+  const { data: facultyData } = await supabase
     .from("users")
     .select(`
       *,
@@ -37,36 +36,39 @@ export default async function FacultyPage() {
     .eq("role", ROLES.FACULTY)
     .order("name")
 
-  // Fetch subject assignments to count per faculty
-  const { data: subjects = [] } = await supabase
-    .from("subjects")
-    .select("id, faculty_id")
-    .eq("institution_id", institutionId)
+  const faculty = facultyData ?? []
 
-  // Fetch section advisor assignments to count per faculty
-  const { data: sections = [] } = await supabase
+  const { data: facultySubjectsData } = await supabase
+    .from("faculty_subjects")
+    .select("faculty_id, subject_id")
+
+  const facultySubjects = facultySubjectsData ?? []
+
+  const { data: sectionsData } = await supabase
     .from("sections")
     .select("id, faculty_advisor_id")
     .eq("institution_id", institutionId)
 
-  // Build stats per faculty member
+  const sections = sectionsData ?? []
+
   const facultyWithStats = faculty.map((f) => ({
     ...f,
-    assignedSubjects: subjects.filter((s) => s.faculty_id === f.id).length,
+    assignedSubjects: facultySubjects.filter((fs) => fs.faculty_id === f.id).length,
     assignedSections: sections.filter((s) => s.faculty_advisor_id === f.id).length,
   }))
 
-  // Fetch departments for create/edit dialog
-  const { data: departments = [] } = await supabase
+  const { data: departmentsData } = await supabase
     .from("departments")
     .select("id, name")
     .eq("institution_id", institutionId)
     .order("name")
 
+  const departments = departmentsData ?? []
+
   return (
     <FacultyClientPage
       initialFaculty={facultyWithStats}
-      departments={departments || []}
+      departments={departments}
       institutionId={institutionId}
     />
   )

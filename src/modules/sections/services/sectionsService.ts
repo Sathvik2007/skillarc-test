@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import type { Section, CreateSectionInput, UpdateSectionInput, SectionFull } from "./types/sections.types"
+import type { Section, CreateSectionInput, UpdateSectionInput, SectionFull } from "../types/sections.types"
 
 export async function createSupabaseSectionsClient() {
   const cookieStore = await cookies()

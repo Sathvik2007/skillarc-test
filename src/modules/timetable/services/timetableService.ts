@@ -20,18 +20,11 @@ export const timetableService = {
 
     if (error) throw error
 
-    console.log("Current User:", user)
-    console.log("Profile:", profile)
-    console.log("Institution ID:", profile.institution_id)
-
     return profile.institution_id
   },
 
-  async getSubjects(
-    institutionId: string,
-    semester?: number
-  ) {
-    const { data, error } = await supabase
+  async getSubjects(institutionId: string, semester?: number, programId?: string | null) {
+    let query = supabase
       .from("subjects")
       .select(`
         id,
@@ -39,54 +32,77 @@ export const timetableService = {
         code,
         semester,
         institution_id,
-        faculty_id,
-        users(name)
+        program_id,
+        credits,
+        subject_type
       `)
       .eq("institution_id", institutionId)
-      .eq("semester", semester)
 
-    if (error) throw error
+    if (semester) {
+      query = query.eq("semester", semester)
+    }
 
-    console.log("Subjects:", data)
-    console.log("Semester:", semester)
-    console.log("Institution:", institutionId)
+    if (programId) {
+      query = query.eq("program_id", programId)
+    }
 
-    return (data ?? []).map((s: any) => ({
-      ...s,
-      faculty_name: s.users?.name ?? "Unassigned",
-    }))
-  },
-
-  async getFaculty(institutionId: string) {
-    const { data, error } = await supabase
-      .from("users")
-      .select("id,name,email,role")
-      .eq("institution_id", institutionId)
-      .eq("role", ROLES.FACULTY)
+    const { data, error } = await query
 
     if (error) throw error
 
     return data ?? []
   },
 
-  async getSlots(
-    institutionId: string,
-    sectionId: string,
-    semester: number
-  ) {
+  async getFaculty(institutionId: string, programId?: string | null) {
+    const { data: subjectData, error: subjectError } = await supabase
+      .from("subjects")
+      .select("id")
+      .eq("institution_id", institutionId)
+      .eq("program_id", programId)
+
+    if (subjectError) throw subjectError
+
+    const subjectIds = (subjectData ?? []).map((subject) => subject.id)
+
+    if (subjectIds.length === 0) return []
+
+    const { data, error } = await supabase
+      .from("faculty_subjects")
+      .select("faculty:faculty_id(id, name, email, role)")
+      .in("subject_id", subjectIds)
+
+    if (error) throw error
+
+    const seen = new Set<string>()
+
+    return (data ?? [])
+      .map((row: any) => row.faculty)
+      .filter(Boolean)
+      .filter((faculty: any) => {
+        if (seen.has(faculty.id)) return false
+        seen.add(faculty.id)
+        return true
+      })
+  },
+
+  async getSlots(institutionId: string, sectionId: string, semester: number) {
     const { data, error } = await supabase
       .from("timetable_slots")
       .select(`
         day,
         period,
         subject_id,
+        faculty_id,
+        faculty:faculty_id(id, name),
         subjects(
           id,
           name,
           code,
           semester,
           institution_id,
-          faculty_id
+          program_id,
+          credits,
+          subject_type
         )
       `)
       .eq("institution_id", institutionId)
@@ -98,7 +114,12 @@ export const timetableService = {
     return (data ?? []).map((s: any) => ({
       day: s.day,
       period: `P${s.period}`,
-      subject: s.subjects,
+      faculty_id: s.faculty_id ?? null,
+      faculty_name: s.faculty?.name ?? null,
+      subject: {
+        ...s.subjects,
+        faculty_name: s.faculty?.name ?? null,
+      },
     }))
   },
 

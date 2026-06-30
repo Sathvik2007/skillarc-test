@@ -10,6 +10,7 @@ export interface UserProfile {
   section_id: string | null
   semester: number | null
   created_at: string
+  is_active?: boolean | null
 }
 
 export interface StudentProfile extends UserProfile {

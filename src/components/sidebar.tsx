@@ -23,7 +23,8 @@ import {
   User,
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
-import { ROLES, type Role } from "@/constants/roles"
+import { ROLES } from "@/constants/roles"
+type Role = typeof ROLES[keyof typeof ROLES]
 
 type MenuItem = {
   name: string
@@ -80,10 +81,11 @@ const roleMenus: Record<Role, MenuItem[]> = {
   ],
 
   [ROLES.FACULTY]: [
-    { name: "Overview",   icon: LayoutDashboard, path: "/dashboard/teacher" },
-    { name: "Subjects",   icon: BookOpen,         path: "/dashboard/teacher/subjects" },
-    { name: "Timetable",  icon: Calendar,         path: "/dashboard/teacher/timetable" },
-    { name: "Profile",    icon: User,             path: "/dashboard/teacher/profile" },
+    { name: "Overview",   icon: LayoutDashboard, path: "/dashboard/faculty" },
+    { name: "Attendance", icon: ClipboardList,    path: "/dashboard/faculty/attendance" },
+    { name: "Subjects",   icon: BookOpen,         path: "/dashboard/faculty/subjects" },
+    { name: "Timetable",  icon: Calendar,         path: "/dashboard/faculty/timetable" },
+    { name: "Profile",    icon: User,             path: "/dashboard/faculty/profile" },
   ],
 
   [ROLES.STUDENT]: [
@@ -336,9 +338,8 @@ export default function Sidebar() {
           ) : (
             menu.map(item => {
               const Icon = item.icon
-              // Active if exact match OR path starts with item path (for sub-routes)
               const isActive = pathname === item.path ||
-                (item.path !== "/dashboard" && pathname.startsWith(item.path))
+                (item.path === "/dashboard" && pathname === "/dashboard")
               return (
                 <Link
                   key={item.path}

@@ -9,10 +9,15 @@ interface TimetableContextType {
   subjects: Subject[]
   faculty: Faculty[]
   slots: Slot[]
+  institutionId: string | null
+  sectionId: string | null
+  semester: string | null
   assignSubject: (
     day: string,
     period: string,
-    subject: Subject | undefined
+    subject: Subject | undefined,
+    facultyId?: string | null,
+    facultyName?: string | null
   ) => void
 }
 
@@ -30,6 +35,7 @@ export function TimetableProvider({
   sectionId,
 }: TimetableProviderProps) {
   const [loading, setLoading] = useState(true)
+  const [institutionId, setInstitutionId] = useState<string | null>(null)
   const [subjects, setSubjects] = useState<Subject[]>([])
   const [faculty, setFaculty] = useState<Faculty[]>([])
   const [slots, setSlots] = useState<Slot[]>([])
@@ -46,22 +52,16 @@ export function TimetableProvider({
           return
         }
 
-        const institutionId =
-          await timetableService.getCurrentInstitutionId()
+        const id = await timetableService.getCurrentInstitutionId()
+        setInstitutionId(id)
 
-        const [subjectsData, facultyData, slotsData] =
-          await Promise.all([
-            timetableService.getSubjects(
-              institutionId,
-              Number(semester)
-            ),
-            timetableService.getFaculty(institutionId),
-            timetableService.getSlots(
-              institutionId,
-              sectionId,
-              Number(semester)
-            ),
-          ])
+        const programId = new URLSearchParams(window.location.search).get("program")
+
+        const [subjectsData, facultyData, slotsData] = await Promise.all([
+          timetableService.getSubjects(id, Number(semester), programId),
+          timetableService.getFaculty(id, programId),
+          timetableService.getSlots(id, sectionId, Number(semester)),
+        ])
 
         setSubjects(subjectsData)
         setFaculty(facultyData)
@@ -79,24 +79,29 @@ export function TimetableProvider({
   function assignSubject(
     day: string,
     period: string,
-    subject: Subject | undefined
+    subject: Subject | undefined,
+    facultyId?: string | null,
+    facultyName?: string | null
   ) {
-    setSlots((prev) =>
-      subject
-        ? [
-            ...prev.filter(
-              (s) => !(s.day === day && s.period === period)
-            ),
-            {
-              day,
-              period,
-              subject,
-            },
-          ]
-        : prev.filter(
-            (s) => !(s.day === day && s.period === period)
-          )
-    )
+    setSlots((prev) => {
+      const nextSlots = prev.filter((s) => !(s.day === day && s.period === period))
+
+      if (!subject) return nextSlots
+
+      return [
+        ...nextSlots,
+        {
+          day,
+          period,
+          faculty_id: facultyId ?? null,
+          subject: {
+            ...subject,
+            faculty_id: facultyId ?? undefined,
+            faculty_name: facultyName ?? subject.faculty_name ?? undefined,
+          },
+        },
+      ]
+    })
   }
 
   return (
@@ -106,6 +111,9 @@ export function TimetableProvider({
         subjects,
         faculty,
         slots,
+        institutionId,
+        sectionId: sectionId ?? null,
+        semester: semester ?? null,
         assignSubject,
       }}
     >
@@ -116,12 +124,6 @@ export function TimetableProvider({
 
 export function useTimetable() {
   const ctx = useContext(TimetableContext)
-
-  if (!ctx) {
-    throw new Error(
-      "useTimetable must be used inside TimetableProvider"
-    )
-  }
-
+  if (!ctx) throw new Error("useTimetable must be used inside TimetableProvider")
   return ctx
 }

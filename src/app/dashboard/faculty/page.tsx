@@ -10,7 +10,7 @@ export default async function FacultyDashboardPage() {
 
   const { data: profile } = await supabase
     .from("users")
-    .select("role, institution_id")
+    .select("name, role, institution_id")
     .eq("id", user.id)
     .single()
 
@@ -22,10 +22,38 @@ export default async function FacultyDashboardPage() {
     .eq("id", profile.institution_id)
     .single()
 
-  const { data: subjects } = await supabase
-    .from("subjects")
-    .select("id, name, code")
+  const { data: assignedSubjects } = await supabase
+    .from("faculty_subjects")
+    .select("subject_id")
     .eq("faculty_id", user.id)
+
+  const subjectIds = (assignedSubjects ?? []).map((row: any) => row.subject_id)
+
+  const { data: subjects } = subjectIds.length
+    ? await supabase.from("subjects").select("id, name, code").in("id", subjectIds)
+    : { data: [] }
+
+  const { data: timetableRows } = await supabase
+    .from("timetable_slots")
+    .select(`
+      day,
+      period,
+      section_id,
+      subjects!inner(id, name, code),
+      sections!inner(name)
+    `)
+    .eq("institution_id", profile.institution_id)
+    .eq("faculty_id", user.id)
+    .order("day")
+    .order("period")
+
+  const timetableSlots = (timetableRows ?? []).map((slot: any) => ({
+    day: slot.day,
+    period: slot.period,
+    section_id: slot.section_id,
+    subjects: Array.isArray(slot.subjects) ? slot.subjects[0] : slot.subjects,
+    sections: Array.isArray(slot.sections) ? slot.sections[0] : slot.sections,
+  }))
 
   const { count: studentCount } = await supabase
     .from("users")
@@ -35,9 +63,14 @@ export default async function FacultyDashboardPage() {
 
   return (
     <FacultyDashboardClient
-      faculty={{ email: user.email ?? "", institution: institution?.name ?? "" }}
+      faculty={{
+        name: profile.name ?? "",
+        email: user.email ?? "",
+        institution: institution?.name ?? "",
+      }}
       subjects={subjects ?? []}
       studentCount={studentCount ?? 0}
+      timetableSlots={timetableSlots ?? []}
     />
   )
 }

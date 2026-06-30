@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@supabase/supabase-js"
+import { ROLES } from "@/constants/roles"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -65,6 +66,8 @@ export default function SetPasswordPage() {
 
       console.log("👤 Current User:", user)
 
+      let redirectPath = "/dashboard"
+
       if (user) {
         const { data: profile, error: profileError } = await supabase
           .from("users")
@@ -74,15 +77,32 @@ export default function SetPasswordPage() {
 
         console.log("📋 Current Profile:", profile)
         console.log("❌ Profile Error:", profileError)
+
+        if (profile?.role === ROLES.STUDENT) {
+          redirectPath = "/dashboard/student"
+        } else if (profile?.role === ROLES.FACULTY) {
+          redirectPath = "/dashboard/faculty"
+        } else if (profile?.role === ROLES.INSTITUTION_ADMIN) {
+          redirectPath = "/dashboard/institution-admin"
+        } else if (profile?.role === ROLES.ORG_ADMIN) {
+          redirectPath = "/dashboard/org-admin"
+        } else if (profile?.role === ROLES.HOD) {
+          redirectPath = "/dashboard/hod"
+        } else if (profile?.role === ROLES.PROGRAM_HEAD) {
+          redirectPath = "/dashboard/program-head"
+        } else if (profile?.role === ROLES.SUPER_ADMIN) {
+          redirectPath = "/dashboard/super-admin"
+        } else if (profile?.role === ROLES.PARENT) {
+          redirectPath = "/dashboard/parent"
+        }
       }
 
       console.log("✅ Password updated successfully")
       setStatus("success")
-      
-      // Wait a moment then redirect to dashboard
+
       setTimeout(() => {
-        console.log("🚀 Redirecting to dashboard...")
-        router.push("/dashboard")
+        console.log("🚀 Redirecting to:", redirectPath)
+        router.push(redirectPath)
       }, 1500)
     } catch (err) {
       console.error("❌ Unexpected error:", err)

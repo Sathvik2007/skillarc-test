@@ -1,6 +1,6 @@
 "use client"
 
-import { Trash2, BookMarked, GraduationCap, Layers, BookOpen, UserCheck, AlertTriangle, Target, Edit2 } from "lucide-react"
+import { Trash2, BookMarked, GraduationCap, BookOpen, Target, Edit2, Building2, Layers } from "lucide-react"
 
 const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
 
@@ -60,7 +60,6 @@ export function SubjectsList({ subjects, onDelete, onEdit }: any) {
       {subjects.map((subject: any) => {
         const type = typeConfig[subject.subject_type] ?? typeConfig.THEORY
         const progColor = getProgramColor(subject.program?.name)
-        const hasAdvisor = !!subject.faculty?.name
 
         return (
           <div
@@ -124,6 +123,22 @@ export function SubjectsList({ subjects, onDelete, onEdit }: any) {
               {/* Info rows */}
               <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
 
+                {/* Department */}
+                {subject.program?.department?.name && (
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 10,
+                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
+                  }}>
+                    <Building2 size={13} color="#6b7280" style={{ flexShrink: 0 }} />
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Department</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {subject.program.department.name}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Program */}
                 <div style={{
                   display: "flex", alignItems: "center", gap: 10,
@@ -139,20 +154,8 @@ export function SubjectsList({ subjects, onDelete, onEdit }: any) {
                   </div>
                 </div>
 
-                {/* Section + Semester */}
+                {/* Semester + Credits */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <Layers size={13} color="#6b7280" style={{ flexShrink: 0 }} />
-                    <div>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Section</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
-                        {subject.section?.name ? `Section ${subject.section.name}` : "N/A"}
-                      </p>
-                    </div>
-                  </div>
                   <div style={{
                     display: "flex", alignItems: "center", gap: 8,
                     backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
@@ -165,19 +168,26 @@ export function SubjectsList({ subjects, onDelete, onEdit }: any) {
                       </p>
                     </div>
                   </div>
-                </div>
-
-                {/* Credits */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                }}>
-                  <Target size={13} color="#6b7280" style={{ flexShrink: 0 }} />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1 }}>
+                  <div style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
+                  }}>
+                    <Target size={13} color="#6b7280" style={{ flexShrink: 0 }} />
                     <div>
                       <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Credits</p>
                       <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{subject.credits} Credits</p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Credit dot bar */}
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
+                }}>
+                  <Layers size={13} color="#6b7280" style={{ flexShrink: 0 }} />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1 }}>
+                    <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Credit weight</p>
                     <div style={{ display: "flex", gap: 3 }}>
                       {Array.from({ length: 6 }).map((_, i) => (
                         <div key={i} style={{
@@ -188,35 +198,6 @@ export function SubjectsList({ subjects, onDelete, onEdit }: any) {
                     </div>
                   </div>
                 </div>
-
-                {/* Faculty */}
-                {hasAdvisor ? (
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0",
-                    borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <UserCheck size={13} color="#16a34a" style={{ flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#16a34a", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Faculty</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#15803d", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {subject.faculty.name}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    backgroundColor: "#fffbeb", border: "1px solid #fde68a",
-                    borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <AlertTriangle size={13} color="#d97706" style={{ flexShrink: 0 }} />
-                    <div>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#d97706", opacity: 0.8, textTransform: "uppercase", letterSpacing: "0.05em" }}>Faculty</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#b45309" }}>Not Assigned</p>
-                    </div>
-                  </div>
-                )}
 
               </div>
             </div>

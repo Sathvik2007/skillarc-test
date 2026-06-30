@@ -28,34 +28,32 @@ export default async function SubjectsPage() {
     .from("subjects")
     .select(`
       *,
-      faculty:faculty_id(id,name,email),
-      section:section_id(id,name),
-      program:program_id(id,name)
+      program:program_id(
+        id, name,
+        department:department_id(id, name)
+      )
     `)
     .eq("institution_id", institutionId)
+    .order("semester")
+    .order("name")
+
+  const { data: departments = [] } = await supabase
+    .from("departments")
+    .select("id, name")
+    .eq("institution_id", institutionId)
+    .order("name")
 
   const { data: programs = [] } = await supabase
     .from("programs")
-    .select("id,name")
+    .select("id, name, department_id, department:department_id(id, name)")
     .eq("institution_id", institutionId)
-
-  const { data: sections = [] } = await supabase
-    .from("sections")
-    .select("id,name,semester,program_id")  // ← added semester + program_id
-    .eq("institution_id", institutionId)
-
-  const { data: faculty = [] } = await supabase
-    .from("users")
-    .select("id,name,email")
-    .eq("institution_id", institutionId)
-    .eq("role", ROLES.FACULTY)
+    .order("name")
 
   return (
     <SubjectsClientPage
       initialSubjects={subjects}
+      departments={departments}
       programs={programs}
-      sections={sections}
-      faculty={faculty}
       institutionId={institutionId}
     />
   )

@@ -49,15 +49,14 @@ function StyledSelect({ value, onChange, children, disabled }: {
   )
 }
 
-function StyledInput({ value, onChange, placeholder, type = "text" }: {
-  value: string | number
+function StyledInput({ value, onChange, placeholder }: {
+  value: string
   onChange: (v: string) => void
   placeholder?: string
-  type?: string
 }) {
   return (
     <input
-      type={type}
+      type="text"
       value={value}
       placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
@@ -73,10 +72,24 @@ function StyledInput({ value, onChange, placeholder, type = "text" }: {
   )
 }
 
-export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, sections, faculty }: any) {
+interface Department { id: string; name: string }
+interface Program    { id: string; name: string; department_id: string }
+
+export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments, programs }: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSubmit: (data: any) => Promise<void>
+  departments: Department[]
+  programs: Program[]
+}) {
   const defaultForm = {
-    name: "", code: "", semester: 1, credits: 4,
-    subject_type: "THEORY", program_id: "", section_id: "", faculty_id: "",
+    department_id: "",
+    program_id: "",
+    semester: 1,
+    name: "",
+    code: "",
+    credits: 4,
+    subject_type: "THEORY",
   }
   const [formData, setFormData] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
@@ -85,29 +98,24 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, se
     setFormData(prev => ({ ...prev, [key]: value }))
   }
 
-  // Filter sections by selected program AND semester
-  const filteredSections = useMemo(() => {
-    return (sections ?? []).filter(
-      (s: any) =>
-        s.program_id === formData.program_id &&
-        s.semester === formData.semester
-    )
-  }, [formData.program_id, formData.semester, sections])
+  // Filter programs by selected department
+  const filteredPrograms = useMemo(() =>
+    programs.filter(p => p.department_id === formData.department_id),
+    [programs, formData.department_id]
+  )
 
-  // Reset section_id when program changes
-  function handleProgramChange(program_id: string) {
-    setFormData(prev => ({ ...prev, program_id, section_id: "" }))
+  function handleDepartmentChange(department_id: string) {
+    setFormData(prev => ({ ...prev, department_id, program_id: "" }))
   }
 
-  // Reset section_id when semester changes
-  function handleSemesterChange(semester: number) {
-    setFormData(prev => ({ ...prev, semester, section_id: "" }))
-  }
+  const canSubmit = formData.program_id && formData.name.trim() && formData.code.trim()
 
   async function handleSubmit() {
-    if (!formData.name.trim() || !formData.code.trim()) return
+    if (!canSubmit) return
     setLoading(true)
-    await onSubmit(formData)
+    // department_id is UI-only — not sent to API
+    const { department_id, ...payload } = formData
+    await onSubmit(payload)
     setFormData(defaultForm)
     setLoading(false)
   }
@@ -149,6 +157,55 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, se
         {/* Body */}
         <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16, maxHeight: "70vh", overflowY: "auto" }}>
 
+          {/* Department */}
+          <div>
+            <FieldLabel>Department</FieldLabel>
+            <StyledSelect value={formData.department_id} onChange={handleDepartmentChange}>
+              <option value="">Select Department</option>
+              {departments.map(d => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </StyledSelect>
+          </div>
+
+          {/* Program — filtered by department */}
+          <div>
+            <FieldLabel>Program</FieldLabel>
+            <StyledSelect
+              value={formData.program_id}
+              onChange={v => set("program_id", v)}
+              disabled={!formData.department_id}
+            >
+              <option value="">
+                {!formData.department_id
+                  ? "Select a department first"
+                  : filteredPrograms.length === 0
+                    ? "No programs for this department"
+                    : "Select Program"}
+              </option>
+              {filteredPrograms.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </StyledSelect>
+          </div>
+
+          {/* Semester */}
+          <div>
+            <FieldLabel>Semester</FieldLabel>
+            <StyledSelect
+              value={String(formData.semester)}
+              onChange={v => set("semester", Number(v))}
+              disabled={!formData.program_id}
+            >
+              {!formData.program_id
+                ? <option value="">Select a program first</option>
+                : [1,2,3,4,5,6,7,8].map(s => (
+                    <option key={s} value={s}>Semester {s}</option>
+                  ))
+              }
+            </StyledSelect>
+          </div>
+
           {/* Name + Code */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div>
@@ -161,7 +218,17 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, se
             </div>
           </div>
 
-          {/* Subject Type pill selector */}
+          {/* Credits */}
+          <div>
+            <FieldLabel>Credits</FieldLabel>
+            <StyledSelect value={String(formData.credits)} onChange={v => set("credits", Number(v))}>
+              {[1,2,3,4,5,6].map(c => (
+                <option key={c} value={c}>{c} {c === 1 ? "Credit" : "Credits"}</option>
+              ))}
+            </StyledSelect>
+          </div>
+
+          {/* Subject Type */}
           <div>
             <FieldLabel>Subject Type</FieldLabel>
             <div style={{ display: "flex", gap: 8 }}>
@@ -190,76 +257,6 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, se
             </div>
           </div>
 
-          {/* Program */}
-          <div>
-            <FieldLabel>Program</FieldLabel>
-            <StyledSelect value={formData.program_id} onChange={handleProgramChange}>
-              <option value="">Select Program</option>
-              {(programs ?? []).map((p: any) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </StyledSelect>
-          </div>
-
-          {/* Semester — now above Section, resets section on change */}
-          <div>
-            <FieldLabel>Semester</FieldLabel>
-            <StyledSelect
-              value={String(formData.semester)}
-              onChange={v => handleSemesterChange(Number(v))}
-              disabled={!formData.program_id}
-            >
-              {!formData.program_id
-                ? <option value="">Select a program first</option>
-                : [1,2,3,4,5,6,7,8].map(s => (
-                    <option key={s} value={s}>Semester {s}</option>
-                  ))
-              }
-            </StyledSelect>
-          </div>
-
-          {/* Section — filtered by program AND semester */}
-          <div>
-            <FieldLabel>Section</FieldLabel>
-            <StyledSelect
-              value={formData.section_id}
-              onChange={v => set("section_id", v)}
-              disabled={!formData.program_id}
-            >
-              <option value="">
-                {!formData.program_id
-                  ? "Select a program first"
-                  : filteredSections.length === 0
-                    ? "No sections for this program & semester"
-                    : "Select Section"}
-              </option>
-              {filteredSections.map((s: any) => (
-                <option key={s.id} value={s.id}>{s.name}</option>
-              ))}
-            </StyledSelect>
-          </div>
-
-          {/* Credits */}
-          <div>
-            <FieldLabel>Credits</FieldLabel>
-            <StyledSelect value={String(formData.credits)} onChange={v => set("credits", Number(v))}>
-              {[1,2,3,4,5,6].map(c => (
-                <option key={c} value={c}>{c} {c === 1 ? "Credit" : "Credits"}</option>
-              ))}
-            </StyledSelect>
-          </div>
-
-          {/* Faculty */}
-          <div>
-            <FieldLabel>Faculty</FieldLabel>
-            <StyledSelect value={formData.faculty_id} onChange={v => set("faculty_id", v)}>
-              <option value="">Not Assigned</option>
-              {(faculty ?? []).map((f: any) => (
-                <option key={f.id} value={f.id}>{f.name}</option>
-              ))}
-            </StyledSelect>
-          </div>
-
         </div>
 
         {/* Footer */}
@@ -282,14 +279,12 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, programs, se
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={!formData.name.trim() || !formData.code.trim() || loading}
+            disabled={!canSubmit || loading}
             style={{
               flex: 2, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "#fff",
-              background: !formData.name.trim() || !formData.code.trim()
-                ? "#e5e7eb"
-                : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              background: !canSubmit ? "#e5e7eb" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
               border: "none", borderRadius: 10,
-              cursor: !formData.name.trim() || !formData.code.trim() || loading ? "not-allowed" : "pointer",
+              cursor: !canSubmit || loading ? "not-allowed" : "pointer",
               fontFamily: font, opacity: loading ? 0.7 : 1,
             }}
           >
