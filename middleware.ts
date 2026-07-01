@@ -35,10 +35,15 @@ export async function middleware(request: NextRequest) {
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
   const { pathname } = request.nextUrl
-  const isAuthRoute = pathname === "/login" || pathname === "/signup"
+  // Support both legacy `/login` and new `/auth/login` routes
+  const isAuthRoute =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/auth/login" ||
+    pathname === "/auth/signup"
 
   if (!user && !isAuthRoute) {
-    return NextResponse.redirect(new URL("/login", request.url))
+    return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
   if (user && isAuthRoute) {
