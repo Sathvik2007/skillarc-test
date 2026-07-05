@@ -19,34 +19,42 @@ export default async function SectionsPage() {
 
   const institutionId = userProfile.institution_id
 
-  const { data: sections = [] } = await supabase
-    .from("sections")
-    .select(`
-      *,
-      faculty_advisor:faculty_advisor_id(
-        id,
-        name,
-        email
-      ),
-      program:program_id(
-        id,
-        name
-      )
-    `)
-    .eq("institution_id", institutionId)
-    .order("semester", { ascending: true })
-    .order("name", { ascending: true })
+  const [
+    sectionsRes,
+    programsRes,
+    facultyRes,
+  ] = await Promise.all([
+    supabase
+      .from("sections")
+      .select(`
+        *,
+        faculty_advisor:faculty_advisor_id(
+          id,
+          name,
+          email
+        ),
+        program:program_id(
+          id,
+          name
+        )
+      `)
+      .eq("institution_id", institutionId)
+      .order("semester", { ascending: true })
+      .order("name", { ascending: true }),
+    supabase
+      .from("programs")
+      .select("id, name, departments(id)")
+      .eq("departments.institution_id", institutionId),
+    supabase
+      .from("users")
+      .select("id, name, email")
+      .eq("institution_id", institutionId)
+      .eq("role", ROLES.FACULTY),
+  ])
 
-  const { data: programs = [] } = await supabase
-    .from("programs")
-    .select("id, name, departments(id)")
-    .eq("departments.institution_id", institutionId)
-
-  const { data: faculty = [] } = await supabase
-    .from("users")
-    .select("id, name, email")
-    .eq("institution_id", institutionId)
-    .eq("role", ROLES.FACULTY)
+  const sections = sectionsRes.data ?? []
+  const programs = programsRes.data ?? []
+  const faculty = facultyRes.data ?? []
 
   return (
     <SectionsClientPage

@@ -24,34 +24,32 @@ export default async function AttendancePage() {
 
   const institutionId = profile.institution_id
 
-  const { data: programs = [] } = await supabase
-    .from("programs")
-    .select("id,name")
-    .eq("institution_id", institutionId)
-    .order("name")
+  const [programsRes, sectionsRes, subjectsRes, studentsRes] = await Promise.all([
+    supabase
+      .from("programs")
+      .select("id,name")
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("sections")
+      .select("id,name,semester,program_id")
+      .eq("institution_id", institutionId)
+      .order("semester"),
+    supabase
+      .from("subjects")
+      .select("id,name,code,semester")
+      .eq("institution_id", institutionId)
+      .order("semester"),
+    supabase
+      .from("students")
+      .select("*")
+      .eq("institution_id", institutionId),
+  ])
 
-  const { data: sections = [] } = await supabase
-    .from("sections")
-    .select("id,name,semester,program_id")
-    .eq("institution_id", institutionId)
-    .order("semester")
-
-  const { data: subjects = [] } = await supabase
-    .from("subjects")
-    .select("id,name,code,semester")
-    .eq("institution_id", institutionId)
-    .order("semester")
-
-  const {
-    data: students,
-    error: studentsError,
-  } = await supabase
-    .from("students")
-    .select("*")
-    .eq("institution_id", institutionId)
-
-  console.log("Students Error:", studentsError)
-  console.log("Students Data:", students)
+  const programs = programsRes.data ?? []
+  const sections = sectionsRes.data ?? []
+  const subjects = subjectsRes.data ?? []
+  const students = studentsRes.data ?? []
 
   return (
     <AttendanceClient

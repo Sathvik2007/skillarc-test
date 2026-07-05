@@ -24,33 +24,31 @@ export default async function FacultySubjectsPage() {
 
   const institutionId = profile.institution_id
 
-  const { data: facultyData } = await supabase
-    .from("users")
-    .select("id,name")
-    .eq("institution_id", institutionId)
-    .eq("role", ROLES.FACULTY)
-    .order("name")
+  const [facultyRes, subjectsRes, assignmentsRes] = await Promise.all([
+    supabase
+      .from("users")
+      .select("id,name")
+      .eq("institution_id", institutionId)
+      .eq("role", ROLES.FACULTY)
+      .order("name"),
+    supabase
+      .from("subjects")
+      .select("id,name,code,semester")
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("faculty_subjects")
+      .select(`
+        id,
+        faculty_id,
+        subject_id
+      `)
+      .eq("institution_id", institutionId),
+  ])
 
-  const faculty = facultyData ?? []
-
-  const { data: subjectsData } = await supabase
-    .from("subjects")
-    .select("id,name,code,semester")
-    .eq("institution_id", institutionId)
-    .order("name")
-
-  const subjects = subjectsData ?? []
-
-  const { data: assignmentsData } = await supabase
-    .from("faculty_subjects")
-    .select(`
-      id,
-      faculty_id,
-      subject_id
-    `)
-    .eq("institution_id", institutionId)
-
-  const assignments = assignmentsData ?? []
+  const faculty = facultyRes.data ?? []
+  const subjects = subjectsRes.data ?? []
+  const assignments = assignmentsRes.data ?? []
 
   return (
     <FacultySubjectsClientPage

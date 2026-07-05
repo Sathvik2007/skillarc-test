@@ -1,6 +1,7 @@
 "use client"
 
 import { Activity, AlertCircle, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock, GraduationCap } from "lucide-react"
+import Link from "next/link"
 
 const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
 
@@ -100,8 +101,16 @@ export default function StudentPage({
               </p>
             </div>
           </div>
-          <div style={{ border: "1px solid #ece7ff", background: "#f5f3ff", borderRadius: 999, padding: "8px 12px", color: "#6d28d9", fontSize: 12, fontWeight: 700 }}>
-            {student.programName} · Semester {student.semester ?? "—"}
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <Link href="/dashboard/student/todo" style={{ textDecoration: "none", fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 999, padding: "8px 14px" }}>
+              📋 To-Do List
+            </Link>
+            <Link href="/dashboard/student/report-card" style={{ textDecoration: "none", fontSize: 12, fontWeight: 700, color: "#0d9488", background: "#f0fdfa", border: "1px solid #99f6e4", borderRadius: 999, padding: "8px 14px" }}>
+              🏆 Report Card
+            </Link>
+            <div style={{ border: "1px solid #ece7ff", background: "#f5f3ff", borderRadius: 999, padding: "8px 12px", color: "#6d28d9", fontSize: 12, fontWeight: 700 }}>
+              {student.programName} · Semester {student.semester ?? "—"}
+            </div>
           </div>
         </div>
       </div>
@@ -168,16 +177,22 @@ export default function StudentPage({
               </div>
             ) : (
               subjects.map((subject) => (
-                <div key={subject.id} style={{ border: "1px solid #f3f4f6", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fff" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>📘</div>
-                    <div>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: "#111827", margin: 0 }}>{subject.name}</p>
-                      <p style={{ fontSize: 10, color: "#9ca3af", margin: "2px 0 0" }}>{subject.code} · {subject.facultyName}</p>
+                <Link
+                  key={subject.id}
+                  href={`/dashboard/student/subjects/${subject.id}`}
+                  style={{ textDecoration: "none", display: "block" }}
+                >
+                  <div style={{ border: "1px solid #f3f4f6", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fff", transition: "transform 0.2s" }} className="hover:scale-[1.01]">
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>📘</div>
+                      <div>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: "#111827", margin: 0 }}>{subject.name}</p>
+                        <p style={{ fontSize: 10, color: "#9ca3af", margin: "2px 0 0" }}>{subject.code} · {subject.facultyName}</p>
+                      </div>
                     </div>
+                    <ChevronRight size={13} color="#d1d5db" />
                   </div>
-                  <ChevronRight size={13} color="#d1d5db" />
-                </div>
+                </Link>
               ))
             )}
           </div>

@@ -41,26 +41,30 @@ export default async function StudentsPage() {
     .order("name")
     .range(0, 24) // first 25 rows
 
-  const { data: sections = [] } = await supabase
-    .from("sections")
-    .select(`
-      id,
-      name,
-      semester,
-      program_id,
-      program:program_id(
+  const [sectionsRes, programsRes] = await Promise.all([
+    supabase
+      .from("sections")
+      .select(`
         id,
-        name
-      )
-    `)
-    .eq("institution_id", institutionId)
-    .order("name")
+        name,
+        semester,
+        program_id,
+        program:program_id(
+          id,
+          name
+        )
+      `)
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("programs")
+      .select("id,name")
+      .eq("institution_id", institutionId)
+      .order("name"),
+  ])
 
-  const { data: programs = [] } = await supabase
-    .from("programs")
-    .select("id,name")
-    .eq("institution_id", institutionId)
-    .order("name")
+  const sections = sectionsRes.data ?? []
+  const programs = programsRes.data ?? []
 
   return (
     <StudentsClientPage

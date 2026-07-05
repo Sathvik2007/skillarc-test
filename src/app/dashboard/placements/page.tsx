@@ -90,7 +90,7 @@ export default function PlacementsDashboard() {
   const isStudent = userRole?.toLowerCase() === "student" || userRole?.toLowerCase() === "parent";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 rounded-[2rem] border border-white/10 bg-slate-950/10 p-8 shadow-[0_40px_120px_-60px_rgba(15,23,42,0.3)] backdrop-blur-xl">
       {isStudent ? (
         <StudentPortalView
           userName={userName}
@@ -102,8 +102,8 @@ export default function PlacementsDashboard() {
       ) : (
         <div className="space-y-6">
           {/* Tabs bar */}
-          <div className="border-b border-slate-200">
-            <nav className="flex space-x-6 overflow-x-auto no-scrollbar">
+          <div className="border-b border-white/10 pb-4">
+            <nav className="flex space-x-4 overflow-x-auto no-scrollbar bg-slate-950/20 px-4 py-3 rounded-[1.75rem] shadow-[0_16px_50px_-30px_rgba(15,23,42,0.3)]">
               {[
                 { id: "overview", label: "Overview" },
                 { id: "students", label: "Students Database" },
@@ -211,7 +211,7 @@ function StudentPortalView({
       </div>
 
       {/* Sub Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-lg w-fit">
+      <div className="flex bg-slate-950/20 p-1 rounded-full w-fit shadow-[0_18px_40px_-26px_rgba(15,23,42,0.4)] backdrop-blur-xl">
         {[
           { id: "predictor", label: "Predictor & Insights" },
           { id: "drives", label: "Placement Drives" },
@@ -220,9 +220,9 @@ function StudentPortalView({
           <button
             key={tab.id}
             onClick={() => setSubTab(tab.id as any)}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${subTab === tab.id
-                ? "bg-white text-violet-600 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${subTab === tab.id
+                ? "bg-white/95 text-slate-950 shadow-sm"
+                : "text-slate-300 hover:bg-white/10 hover:text-slate-100"
               }`}
           >
             {tab.label}
@@ -244,7 +244,7 @@ function StudentPortalView({
               {drives
                 .filter(d => d.eligible_branches.includes(studentProfile.branch) && avgSgpa >= d.min_cgpa && activeBacklogs <= d.backlogs_allowed)
                 .map((drive) => (
-                  <div key={drive.id} className="border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-violet-100 hover:shadow-sm transition-all bg-white">
+                  <div key={drive.id} className="border border-white/10 rounded-[1.75rem] p-5 flex flex-col justify-between transition-all duration-200 bg-slate-950/20 text-slate-100 hover:border-violet-300 hover:bg-slate-950/30 hover:shadow-[0_20px_80px_-40px_rgba(124,58,237,0.35)]">
                     <div>
                       <div className="flex justify-between items-start mb-2">
                         <div>
@@ -253,7 +253,7 @@ function StudentPortalView({
                         </div>
                         <Badge variant="success">Eligible</Badge>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 mt-3 bg-slate-50 p-2 rounded-lg">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-300 mt-3 bg-white/5 p-3 rounded-[1.5rem] border border-white/10">
                         <p><strong>Package:</strong> ₹{drive.ctc} LPA</p>
                         <p><strong>Min CGPA:</strong> {drive.min_cgpa}</p>
                         <p><strong>Mode:</strong> {drive.interview_mode}</p>
@@ -1331,7 +1331,9 @@ function PredictorTabView({
   const [sgpa, setSgpa] = useState<number>(8.0);
   const [backlogs, setBacklogs] = useState<number>(0);
   const [attendance, setAttendance] = useState<number>(85);
-  const [skills, setSkills] = useState<string>("Python, React, SQL");
+  const [skillsTags, setSkillsTags] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [aiExplanation, setAiExplanation] = useState<string>("");
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
 
   // Sync inputs with selected student profile
@@ -1345,13 +1347,13 @@ function PredictorTabView({
         setSgpa(parseFloat(sVal.toFixed(2)));
         setAttendance(parseFloat(aVal.toFixed(1)));
         setBacklogs(bVal);
-        setSkills(match.skills);
+        setSkillsTags((match.skills || "").split(",").map((s: string) => s.trim()).filter(Boolean));
       }
     }
   }, [selectedStudentId, students]);
 
   function runPrediction() {
-    const sc = skills.split(",").map(x => x.trim()).filter(Boolean).length;
+    const sc = skillsTags.length;
     const res = predictPlacementProbability(sgpa, backlogs, attendance, sc);
     setPrediction(res);
   }
@@ -1359,7 +1361,7 @@ function PredictorTabView({
   // Auto-run first load
   useEffect(() => {
     runPrediction();
-  }, [sgpa, backlogs, attendance, skills]);
+  }, [sgpa, backlogs, attendance, skillsTags]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1409,11 +1411,45 @@ function PredictorTabView({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">Competencies (Comma separated)</label>
-              <Input value={skills} onChange={e => setSkills(e.target.value)} placeholder="Python, React, AWS..." />
+              <label className="block text-xs font-bold text-slate-500 mb-1">Competencies</label>
+              <div className="flex flex-wrap gap-2">
+                {skillsTags.map((t, idx) => (
+                  <button key={t + idx} className="px-2 py-1 rounded-full bg-slate-100 text-xs flex items-center gap-2">
+                    <span>{t}</span>
+                    <span className="text-slate-400 cursor-pointer" onClick={() => setSkillsTags(prev => prev.filter(x => x !== t))}>×</span>
+                  </button>
+                ))}
+                <input
+                  value={skillInput}
+                  onChange={e => setSkillInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && skillInput.trim()) {
+                      e.preventDefault();
+                      setSkillsTags(prev => [...prev, skillInput.trim()]);
+                      setSkillInput("");
+                    }
+                  }}
+                  placeholder="Add skill and press Enter"
+                  className="text-xs px-2 py-1 rounded-md border border-slate-200"
+                />
+              </div>
             </div>
 
-            <Button className="w-full" onClick={runPrediction}>Run Analysis Engine</Button>
+            <Button className="w-full" onClick={async () => {
+              if (!prediction) return;
+              setAiExplanation("");
+              try {
+                const res = await fetch("/api/ai/chat", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ prompt: `Explain this placement prediction and provide tailored improvement steps. Inputs: sgpa=${sgpa}, backlogs=${backlogs}, attendance=${attendance}, skills=${skillsTags.join(", ")}, score=${prediction.probability}` }),
+                });
+                const j = await res.json();
+                setAiExplanation(j.text || j.answer || "AI explanation unavailable.");
+              } catch (err) {
+                setAiExplanation("AI request failed.");
+              }
+            }}>Explain Prediction</Button>
           </div>
         </Card>
       </div>
@@ -1421,75 +1457,61 @@ function PredictorTabView({
       {/* Analysis reports column */}
       <div className="lg:col-span-2 space-y-4">
         {prediction && (
-          <>
-            {/* Main result */}
-            <div className="flex flex-col md:flex-row items-center gap-6 bg-white border border-slate-100 p-6 rounded-xl shadow-sm">
-              {/* Circular gauge */}
-              <div className="relative w-28 h-28 flex items-center justify-center">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                  <circle
-                    cx="18" cy="18" r="16" fill="none"
-                    stroke={
-                      prediction.tier === "High"
-                        ? "#10b981"
-                        : prediction.tier === "Medium"
-                          ? "#f59e0b"
-                          : prediction.tier === "Low"
-                            ? "#f97316"
-                            : "#ef4444"
-                    }
-                    strokeWidth="2.5"
-                    strokeDasharray={`${prediction.probability} 100`}
-                    strokeLinecap="round"
-                    className="transition-all duration-500 ease-out"
-                  />
-                </svg>
-                <div className="absolute flex flex-col items-center justify-center">
-                  <span className="text-2xl font-black text-slate-800 leading-none">{prediction.probability}%</span>
-                  <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Likelihood</span>
-                </div>
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <div className="flex-1 bg-white border border-slate-100 p-6 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <h4 className="font-bold text-slate-800 text-base">Prediction Evaluation</h4>
+                <Badge
+                  variant={prediction.probability >= 75 ? "success" : prediction.probability >= 50 ? "warning" : "danger"}
+                >
+                  {prediction.probability >= 75 ? "High" : prediction.probability >= 50 ? "Medium" : "Low"} Confidence
+                </Badge>
               </div>
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-slate-800 text-base">Prediction Evaluation</h4>
-                  <Badge
-                    variant={
-                      prediction.tier === "High"
-                        ? "success"
-                        : prediction.tier === "Medium"
-                          ? "warning"
-                          : prediction.tier === "Low"
-                            ? "warning"
-                            : "danger"
-                    }
-                  >
-                    {prediction.tier} Confidence
-                  </Badge>
-                </div>
-                <p className="text-xs text-slate-400 font-semibold mt-1">
-                  Based on Decision Forest simulations trained on university recruitment histories.
-                </p>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium mt-3">
-                  This student displays a <strong>{prediction.probability}%</strong> chance of securing placement in standard recruitment drives. This model calculates academic CGPA, backlog counts, attendance buffers, and active technical competencies to evaluate candidate score against historical selection boundaries.
-                </p>
-              </div>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Based on Decision Forest simulations trained on university recruitment histories.</p>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium mt-3">This student displays a <strong>{prediction.probability}%</strong> chance of securing placement in standard recruitment drives.</p>
             </div>
 
-            {/* Suggestions catalog */}
-            <Card>
-              <h4 className="font-bold text-sm text-slate-800 mb-3">AI Actionable Improvement Plan</h4>
-              <div className="space-y-2.5">
-                {prediction.suggestions.map((item, index) => (
-                  <div key={index} className="flex gap-2.5 items-start p-3 bg-slate-50 rounded-xl border border-slate-100/50 text-xs font-semibold leading-relaxed text-slate-600">
-                    <span className="text-violet-600 font-bold shrink-0 mt-0.5">✓</span>
-                    <p>{item}</p>
+            <div className="w-72">
+              <div className="bg-white border border-slate-100 p-4 rounded-xl mb-4 flex items-center justify-center">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
+                    <circle
+                      cx="18" cy="18" r="16" fill="none"
+                      stroke={prediction.probability >= 75 ? "#10b981" : prediction.probability >= 50 ? "#f59e0b" : "#ef4444"}
+                      strokeWidth="2.5"
+                      strokeDasharray={`${prediction.probability} ${100 - prediction.probability}`}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 450ms ease-out, stroke 350ms" }}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-xl font-black text-slate-800 leading-none">{prediction.probability}%</span>
+                    <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Likelihood</span>
                   </div>
-                ))}
+                </div>
               </div>
-            </Card>
-          </>
+
+              <Card>
+                <h4 className="font-bold text-sm text-slate-800 mb-3">AI Actionable Improvement Plan</h4>
+                <div className="space-y-2.5">
+                  {prediction.suggestions.map((item, index) => (
+                    <div key={index} className="flex gap-2.5 items-start p-3 bg-slate-50 rounded-xl border border-slate-100/50 text-xs font-semibold leading-relaxed text-slate-600">
+                      <span className="text-violet-600 font-bold shrink-0 mt-0.5">✓</span>
+                      <p>{item}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {aiExplanation && (
+                  <div className="mt-4 p-3 bg-white border border-slate-100 rounded-md text-sm text-slate-700">
+                    <h5 className="font-bold text-sm mb-2">AI Explanation</h5>
+                    <div className="text-xs leading-relaxed">{aiExplanation}</div>
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>

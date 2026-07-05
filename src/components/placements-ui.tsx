@@ -8,7 +8,7 @@ export function Card({ className, children, ...props }: React.HTMLAttributes<HTM
   return (
     <div
       className={cn(
-        "bg-white rounded-xl border border-slate-100 shadow-sm p-6 hover:shadow-md transition-shadow",
+        "rounded-[2rem] border border-white/20 bg-white/10 shadow-[0_30px_80px_-30px_rgba(15,23,42,0.4)] backdrop-blur-2xl p-6 transition-all hover:shadow-[0_30px_100px_-30px_rgba(99,102,241,0.4)]",
         className
       )}
       {...props}
@@ -30,22 +30,18 @@ interface StatCardProps {
 
 export function StatCard({ label, value, delta, deltaUp, icon, accent }: StatCardProps) {
   return (
-    <div className="bg-white rounded-xl border border-slate-100 shadow-sm p-5 flex flex-col gap-1 hover:border-violet-200 transition-all hover:shadow">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+    <div className="rounded-[1.75rem] border border-white/15 bg-white/10 shadow-[0_16px_60px_rgba(15,23,42,0.14)] p-5 flex flex-col gap-3 transition-all hover:-translate-y-0.5 hover:shadow-[0_24px_80px_rgba(99,102,241,0.2)]">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-400">
           {label}
         </span>
         {icon && (
-          <span className={cn("p-2 rounded-lg flex items-center justify-center text-sm", accent ?? "bg-violet-50 text-violet-600")}>
-            {icon}
-          </span>
+          <span className={cn("p-2 rounded-2xl flex items-center justify-center text-sm shadow-sm shadow-slate-900/5", accent ?? "bg-violet-50 text-violet-600")}> {icon} </span>
         )}
       </div>
-      <span className="text-2xl font-bold text-slate-800 mt-1">{value}</span>
+      <span className="text-3xl font-semibold text-slate-900">{value}</span>
       {delta && (
-        <span className={cn("text-xs font-medium mt-1 flex items-center gap-1", deltaUp ? "text-emerald-600" : "text-rose-600")}>
-          {deltaUp ? "▲" : "▼"} {delta}
-        </span>
+        <span className={cn("text-xs font-medium flex items-center gap-1", deltaUp ? "text-emerald-600" : "text-rose-600")}> {deltaUp ? "▲" : "▼"} {delta} </span>
       )}
     </div>
   );
@@ -85,11 +81,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", loading, className, children, disabled, ...props }, ref) => {
-    const base = "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed";
+    const base = "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed";
     const styles = {
-      primary: "bg-violet-600 hover:bg-violet-700 text-white shadow-sm shadow-violet-100",
-      secondary: "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50",
-      ghost: "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+      primary: "bg-gradient-to-r from-violet-600 via-fuchsia-600 to-cyan-500 text-white shadow-[0_24px_80px_-32px_rgba(124,58,237,0.65)] hover:shadow-[0_24px_80px_-28px_rgba(124,58,237,0.75)]",
+      secondary: "bg-white/90 border border-white/40 text-slate-900 backdrop-blur-xl hover:bg-white",
+      ghost: "text-slate-500 hover:bg-white/10 hover:text-slate-900",
     };
 
     return (
@@ -118,7 +114,7 @@ export const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttribute
     <input
       ref={ref}
       className={cn(
-        "w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 transition-colors placeholder:text-slate-400",
+        "w-full px-3.5 py-2 rounded-2xl border border-white/25 bg-white/10 text-slate-900 text-sm shadow-sm shadow-slate-900/5 backdrop-blur-xl focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200/40 transition-colors placeholder:text-slate-400",
         className
       )}
       {...props}
@@ -133,7 +129,7 @@ export const Select = React.forwardRef<HTMLSelectElement, React.SelectHTMLAttrib
     <select
       ref={ref}
       className={cn(
-        "w-full px-3.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-800 text-sm focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200 transition-colors",
+        "w-full px-3.5 py-2 rounded-2xl border border-white/25 bg-white/10 text-slate-900 text-sm shadow-sm shadow-slate-900/5 backdrop-blur-xl focus:outline-none focus:border-violet-400 focus:ring-1 focus:ring-violet-200/40 transition-colors",
         className
       )}
       {...props}

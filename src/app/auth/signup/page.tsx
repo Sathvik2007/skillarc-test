@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { signupAction } from "@/app/actions/auth"
 import { ROLES } from "@/constants/roles"
 
@@ -23,6 +24,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
 
+  const router = useRouter()
+
   async function handleSignup() {
     setError("")
     if (!name || !email || !password) {
@@ -40,6 +43,8 @@ export default function SignupPage() {
         setLoading(false)
         return
       }
+
+      await router.push("/dashboard")
     } catch (err) {
       console.error("Signup error:", err)
       setLoading(false)

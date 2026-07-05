@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { BookOpen, GraduationCap, UserRound } from "lucide-react"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { ROLES } from "@/constants/roles"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -65,26 +66,33 @@ export default async function StudentSubjectsPage() {
           </div>
         ) : (
           subjects.map((subject) => (
-            <div key={subject.id} style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 18, boxShadow: "0 10px 25px rgba(79,70,229,0.06)" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                  <BookOpen size={18} />
+            <Link
+              key={subject.id}
+              href={`/dashboard/student/subjects/${subject.id}`}
+              style={{ textDecoration: "none", display: "block" }}
+            >
+              <div style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 18, boxShadow: "0 10px 25px rgba(79,70,229,0.06)", height: "100%", boxSizing: "border-box", transition: "transform 0.2s, box-shadow 0.2s" }} className="hover:scale-[1.02] hover:shadow-lg">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                    <BookOpen size={18} />
+                  </div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", borderRadius: 999, padding: "4px 8px" }}>{subject.code}</span>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", borderRadius: 999, padding: "4px 8px" }}>{subject.code}</span>
+                <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: "#111827" }}>{subject.name}</h3>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
+                  <UserRound size={15} />
+                  <span>{subject.facultyName}</span>
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
+                  <GraduationCap size={15} />
+                  <span>Section-linked subject</span>
+                </div>
               </div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: "#111827" }}>{subject.name}</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
-                <UserRound size={15} />
-                <span>{subject.facultyName}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
-                <GraduationCap size={15} />
-                <span>Section-linked subject</span>
-              </div>
-            </div>
+            </Link>
           ))
         )}
       </div>
     </div>
   )
 }
+

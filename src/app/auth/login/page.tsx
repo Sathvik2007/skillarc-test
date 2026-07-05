@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { loginAction } from "@/app/actions/auth"
 
 const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
@@ -10,6 +11,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const router = useRouter()
 
   async function handleLogin() {
     setError("")
@@ -23,6 +26,8 @@ export default function LoginPage() {
         setLoading(false)
         return
       }
+
+      await router.push("/dashboard")
     } catch (err) {
       console.error("Login error:", err)
       setLoading(false)

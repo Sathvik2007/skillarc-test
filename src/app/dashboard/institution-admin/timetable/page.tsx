@@ -24,24 +24,28 @@ export default async function TimetablePage() {
 
   const institutionId = profile.institution_id
 
-  const { data: departmentsData } = await supabase
-    .from("departments")
-    .select("id, name")
-    .eq("institution_id", institutionId)
-    .order("name")
+  const [departmentsRes, programsRes, sectionsRes] = await Promise.all([
+    supabase
+      .from("departments")
+      .select("id, name")
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("programs")
+      .select("id, name, department_id")
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("sections")
+      .select("id, name, semester, program_id")
+      .eq("institution_id", institutionId)
+      .order("semester")
+      .order("name"),
+  ])
 
-  const { data: programsData } = await supabase
-    .from("programs")
-    .select("id, name, department_id")
-    .eq("institution_id", institutionId)
-    .order("name")
-
-  const { data: sectionsData } = await supabase
-    .from("sections")
-    .select("id, name, semester, program_id")
-    .eq("institution_id", institutionId)
-    .order("semester")
-    .order("name")
+  const departmentsData = departmentsRes.data
+  const programsData = programsRes.data
+  const sectionsData = sectionsRes.data
 
   return (
     <TimetableClientPage

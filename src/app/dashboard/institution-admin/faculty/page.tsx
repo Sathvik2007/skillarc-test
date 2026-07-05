@@ -23,47 +23,43 @@ export default async function FacultyPage() {
 
   const institutionId = userProfile.institution_id
 
-  const { data: facultyData } = await supabase
-    .from("users")
-    .select(`
-      *,
-      department:department_id(
-        id,
-        name
-      )
-    `)
-    .eq("institution_id", institutionId)
-    .eq("role", ROLES.FACULTY)
-    .order("name")
+  const [facultyRes, facultySubjectsRes, sectionsRes, departmentsRes] = await Promise.all([
+    supabase
+      .from("users")
+      .select(`
+        *,
+        department:department_id(
+          id,
+          name
+        )
+      `)
+      .eq("institution_id", institutionId)
+      .eq("role", ROLES.FACULTY)
+      .order("name"),
+    supabase
+      .from("faculty_subjects")
+      .select("faculty_id, subject_id"),
+    supabase
+      .from("sections")
+      .select("id, faculty_advisor_id")
+      .eq("institution_id", institutionId),
+    supabase
+      .from("departments")
+      .select("id, name")
+      .eq("institution_id", institutionId)
+      .order("name"),
+  ])
 
-  const faculty = facultyData ?? []
-
-  const { data: facultySubjectsData } = await supabase
-    .from("faculty_subjects")
-    .select("faculty_id, subject_id")
-
-  const facultySubjects = facultySubjectsData ?? []
-
-  const { data: sectionsData } = await supabase
-    .from("sections")
-    .select("id, faculty_advisor_id")
-    .eq("institution_id", institutionId)
-
-  const sections = sectionsData ?? []
+  const faculty = facultyRes.data ?? []
+  const facultySubjects = facultySubjectsRes.data ?? []
+  const sections = sectionsRes.data ?? []
+  const departments = departmentsRes.data ?? []
 
   const facultyWithStats = faculty.map((f) => ({
     ...f,
     assignedSubjects: facultySubjects.filter((fs) => fs.faculty_id === f.id).length,
     assignedSections: sections.filter((s) => s.faculty_advisor_id === f.id).length,
   }))
-
-  const { data: departmentsData } = await supabase
-    .from("departments")
-    .select("id, name")
-    .eq("institution_id", institutionId)
-    .order("name")
-
-  const departments = departmentsData ?? []
 
   return (
     <FacultyClientPage

@@ -54,7 +54,6 @@ const roleMenus: Record<Role, MenuItem[]> = {
     { name: "Analytics",         icon: BarChart3,       path: "/dashboard/org-admin/analytics" },
     { name: "Events",            icon: Calendar,        path: "/dashboard/org-admin/events" },
     { name: "Placements",        icon: Briefcase,       path: "/dashboard/org-admin/placements" },
-    { name: "Settings",          icon: Settings,        path: "/dashboard/org-admin/settings" },
   ],
 
   [ROLES.INSTITUTION_ADMIN]: [
@@ -68,7 +67,6 @@ const roleMenus: Record<Role, MenuItem[]> = {
     { name: "Timetable",    icon: Calendar,         path: "/dashboard/institution-admin/timetable" },
     { name: "Events",       icon: Calendar,         path: "/dashboard/institution-admin/events" },
     { name: "Placements",   icon: Briefcase,        path: "/dashboard/institution-admin/placements" },
-    { name: "Settings",     icon: Settings,         path: "/dashboard/institution-admin/settings" },
   ],
 
   [ROLES.HOD]: [
@@ -103,6 +101,7 @@ const roleMenus: Record<Role, MenuItem[]> = {
 
   [ROLES.STUDENT]: [
     { name: "Overview",   icon: LayoutDashboard, path: "/dashboard/student" },
+    { name: "Attendance", icon: ClipboardList,    path: "/dashboard/student/attendance" },
     { name: "Subjects",   icon: BookOpen,         path: "/dashboard/student/subjects" },
     { name: "Timetable",  icon: Calendar,         path: "/dashboard/student/timetable" },
     { name: "Events",     icon: Calendar,         path: "/dashboard/student/events" },

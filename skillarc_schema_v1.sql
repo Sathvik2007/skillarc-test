@@ -506,8 +506,202 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_logs_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
+create table public.leave_applications (
+  id uuid not null default gen_random_uuid (),
+  student_id uuid not null,
+  section_id uuid null,
+  advisor_id uuid null,
+  status text not null default 'PENDING'::text,
+  reason text null,
+  notes text null,
+  created_at timestamp without time zone null default now(),
+  updated_at timestamp without time zone null default now(),
+  institution_id uuid null,
+  from_date date not null,
+  to_date date not null,
+  approved_at timestamp without time zone null,
+  approved_by uuid null,
+  constraint leave_applications_pkey primary key (id),
+  constraint leave_applications_approved_by_fkey foreign KEY (approved_by) references users (id),
+  constraint leave_applications_institution_id_fkey foreign KEY (institution_id) references institutions (id),
+  constraint leave_applications_advisor_id_fkey foreign KEY (advisor_id) references users (id),
+  constraint leave_applications_section_id_fkey foreign KEY (section_id) references sections (id),
+  constraint leave_applications_student_id_fkey foreign KEY (student_id) references users (id),
+  constraint leave_applications_status_check check (
+    (
+      status = any (
+        array[
+          'PENDING'::text,
+          'APPROVED'::text,
+          'REJECTED'::text
+        ]
+      )
+    )
+  )
+) TABLESPACE pg_default;
 
 
+-- ===========================================
+-- MEETINGS
+-- ===========================================
+
+CREATE TABLE public.meetings (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    institution_id uuid NOT NULL
+        REFERENCES public.institutions(id) ON DELETE CASCADE,
+
+    timetable_slot_id uuid
+        REFERENCES public.timetable_slots(id) ON DELETE SET NULL,
+
+    subject_id uuid
+        REFERENCES public.subjects(id) ON DELETE CASCADE,
+
+    section_id uuid
+        REFERENCES public.sections(id) ON DELETE CASCADE,
+
+    faculty_id uuid NOT NULL
+        REFERENCES public.users(id) ON DELETE CASCADE,
+
+    meeting_code text UNIQUE NOT NULL,
+
+    title text NOT NULL,
+
+    meeting_provider text NOT NULL DEFAULT 'daily'
+        CHECK (meeting_provider IN ('daily','livekit','jitsi','zoom')),
+
+    meeting_type text NOT NULL DEFAULT 'instant'
+        CHECK (meeting_type IN ('instant','scheduled')),
+
+    meeting_url text,
+
+    is_active boolean DEFAULT true,
+
+    scheduled_start timestamptz,
+    scheduled_end timestamptz,
+
+    started_at timestamptz,
+    ended_at timestamptz,
+
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+
+
+-- ===========================================
+-- MEETING PARTICIPANTS
+-- ===========================================
+
+CREATE TABLE public.meeting_participants (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    meeting_id uuid NOT NULL
+        REFERENCES public.meetings(id) ON DELETE CASCADE,
+
+    user_id uuid NOT NULL
+        REFERENCES public.users(id) ON DELETE CASCADE,
+
+    joined_at timestamptz DEFAULT now(),
+
+    left_at timestamptz,
+
+    is_present boolean DEFAULT true,
+
+    UNIQUE(meeting_id, user_id)
+);
+
+
+
+-- ===========================================
+-- MEETING MESSAGES
+-- ===========================================
+
+CREATE TABLE public.meeting_messages (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    meeting_id uuid NOT NULL
+        REFERENCES public.meetings(id) ON DELETE CASCADE,
+
+    institution_id uuid NOT NULL
+        REFERENCES public.institutions(id) ON DELETE CASCADE,
+
+    sender_id uuid NOT NULL
+        REFERENCES public.users(id) ON DELETE CASCADE,
+
+    sender_name text NOT NULL,
+
+    message text NOT NULL,
+
+    is_deleted boolean DEFAULT false,
+
+    created_at timestamptz DEFAULT now()
+);
+
+
+
+-- ===========================================
+-- INDEXES
+-- ===========================================
+
+CREATE INDEX idx_meetings_faculty
+ON public.meetings(faculty_id);
+
+CREATE INDEX idx_meetings_section
+ON public.meetings(section_id);
+
+CREATE INDEX idx_meetings_subject
+ON public.meetings(subject_id);
+
+CREATE INDEX idx_meetings_slot
+ON public.meetings(timetable_slot_id);
+
+CREATE INDEX idx_participants_meeting
+ON public.meeting_participants(meeting_id);
+
+CREATE INDEX idx_participants_user
+ON public.meeting_participants(user_id);
+
+CREATE INDEX idx_messages_meeting
+ON public.meeting_messages(meeting_id);
+
+
+
+-- ===========================================
+-- ENABLE RLS
+-- ===========================================
+
+ALTER TABLE public.meetings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meeting_participants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.meeting_messages ENABLE ROW LEVEL SECURITY;
+
+
+
+-- ===========================================
+-- TEMP DEVELOPMENT POLICIES
+-- (Replace later with proper policies)
+-- ===========================================
+
+CREATE POLICY "meetings_all"
+ON public.meetings
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "participants_all"
+ON public.meeting_participants
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
+
+CREATE POLICY "messages_all"
+ON public.meeting_messages
+FOR ALL
+TO authenticated
+USING (true)
+WITH CHECK (true);
 -- =============================================================
 --  END OF SCHEMA  (30 tables total)
 -- =============================================================

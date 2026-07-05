@@ -2,6 +2,7 @@ import { redirect } from "next/navigation"
 import { BookOpen, GraduationCap, Layers } from "lucide-react"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { ROLES } from "@/constants/roles"
+import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
@@ -63,17 +64,17 @@ export default async function FacultySubjectsPage() {
 
   const sectionMap = new Map((Array.isArray(sectionsData) ? sectionsData : []).map((section: any) => [section.id, section.name]))
 
-  const subjectMetaMap = new Map<string, { sectionName?: string; semester?: number }>()
+  const subjectMetaMap = new Map<string, { sectionNames: string[]; semester?: number }>()
   for (const row of timetableRows ?? []) {
     const subjectId = row.subject_id
     const sectionId = row.section_id
     if (!subjectId) continue
 
-    const existing = subjectMetaMap.get(subjectId) ?? {}
+    const existing = subjectMetaMap.get(subjectId) ?? { sectionNames: [] }
     if (sectionId) {
       const sectionName = sectionMap.get(sectionId)
-      if (sectionName) {
-        existing.sectionName = sectionName
+      if (sectionName && !existing.sectionNames.includes(sectionName)) {
+        existing.sectionNames.push(sectionName)
       }
     }
 
@@ -91,7 +92,7 @@ export default async function FacultySubjectsPage() {
       id: subject.id,
       name: subject.name,
       code: subject.code,
-      sectionName: meta?.sectionName ?? "Not scheduled yet",
+      sectionName: meta && meta.sectionNames.length ? `Sections: ${meta.sectionNames.join(", ")}` : "No sections scheduled",
       programName: meta?.semester != null ? `Semester ${meta.semester}` : "Semester not assigned",
     }
   })
@@ -118,25 +119,31 @@ export default async function FacultySubjectsPage() {
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
         {subjects.map((subject) => (
-          <div key={subject.id} style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 18, boxShadow: "0 10px 25px rgba(79,70,229,0.06)" }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                <GraduationCap size={18} />
+          <Link
+            key={subject.id}
+            href={`/dashboard/faculty/subjects/${subject.id}`}
+            style={{ textDecoration: "none", display: "block" }}
+          >
+            <div style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 18, boxShadow: "0 10px 25px rgba(79,70,229,0.06)", height: "100%", boxSizing: "border-box", transition: "transform 0.2s, box-shadow 0.2s" }} className="hover:scale-[1.02] hover:shadow-lg">
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
+                  <GraduationCap size={18} />
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", borderRadius: 999, padding: "4px 8px" }}>
+                  {subject.code}
+                </span>
               </div>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", borderRadius: 999, padding: "4px 8px" }}>
-                {subject.code}
-              </span>
+              <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: "#111827" }}>{subject.name}</h3>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 10 }}>
+                <Layers size={15} />
+                <span>{subject.sectionName}</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
+                <GraduationCap size={15} />
+                <span>{subject.programName}</span>
+              </div>
             </div>
-            <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: "#111827" }}>{subject.name}</h3>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 10 }}>
-              <Layers size={15} />
-              <span>{subject.sectionName}</span>
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
-              <GraduationCap size={15} />
-              <span>{subject.programName}</span>
-            </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -148,3 +155,4 @@ export default async function FacultySubjectsPage() {
     </div>
   )
 }
+

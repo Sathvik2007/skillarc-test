@@ -2,9 +2,7 @@
 
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
 import { ROLES } from "@/constants/roles"
-import { DASHBOARD_ROUTES } from "@/constants/routes"
 
 export async function loginAction(email: string, password: string) {
   const cookieStore = await cookies()
@@ -32,7 +30,7 @@ export async function loginAction(email: string, password: string) {
     return { error: error.message }
   }
 
-  redirect("/dashboard")
+  return { success: true }
 }
 
 export async function signupAction(
@@ -88,5 +86,5 @@ export async function signupAction(
     return { error: insertError.message }
   }
 
-  redirect("/dashboard")
+  return { success: true }
 }

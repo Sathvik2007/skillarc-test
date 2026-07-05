@@ -35,13 +35,14 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
   // Database-driven States
   const [companies, setCompanies] = useState<Company[]>([]);
   const [drives, setDrives] = useState<Drive[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [studentApplications, setStudentApplications] = useState<any[]>([]);
 
   // Local metric states (e.g. attendance computed from DB)
   const [dbAttendancePercent, setDbAttendancePercent] = useState<number>(85.0);
 
   // Analytical structures
-  const [analytics, setAnalytics] = useState(buildAnalytics());
+  const [analytics, setAnalytics] = useState(() => buildAnalytics());
 
   // Load user profile & sync data
   useEffect(() => {
@@ -75,15 +76,15 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
             setDbAttendancePercent(Math.round((present / attendanceData.length) * 100));
           }
 
-          // Fetch student placements applications
-          const { data: apps } = await supabase
-            .from("applications")
-            .select("*, job_posts(title, company_id)")
-            .eq("student_id", user.id);
+              // Fetch student placements applications
+              const { data: apps } = await supabase
+                .from("applications")
+                .select("*, job_posts(title, company_id)")
+                .eq("student_id", user.id);
           
-          if (apps) {
-            setStudentApplications(apps);
-          }
+              if (apps) {
+                setStudentApplications(apps);
+              }
         } else {
           // Local fallback in non-auth setups
           setUserRole("institution_admin");
@@ -153,6 +154,112 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
         };
       });
 
+      // 3. Fetch Students (real data) and compute analytics
+      const { data: studentsRes, error: studentsErr } = await supabase
+        .from("students")
+        .select("*")
+        .order("name", { ascending: true });
+
+      const fetchedStudents: Student[] = (studentsRes || []).map((s: any) => ({
+        student_id: s.student_id || s.id || String(s.id),
+        name: s.name || s.full_name || "Unknown",
+        branch: s.branch || s.program || "CSE",
+        year: s.year || 4,
+        skills: s.skills || "",
+        hackathons: s.hackathons || 0,
+        papers: s.papers || 0,
+        conferences: s.conferences || 0,
+        sports: s.sports || 0,
+        clubs: s.clubs || 0,
+        status: s.status || (s.placed ? "Placed" : "Not Placed"),
+        company: s.company || s.placed_company,
+        package: s.package || s.pkg || s.placed_package,
+        placed_date: s.placed_date || s.offer_date,
+        sgpa: s.sgpa || {},
+        backlogs: s.backlogs || {},
+        attendance: s.attendance || {},
+      }));
+
+      // compute lightweight analytics from fetchedStudents and fetchedCompanies
+      function computeAnalytics(studs: Student[], compsList: Company[], drivesList: Drive[]) {
+        const total = studs.length;
+        const placed = studs.filter(s => s.status === "Placed");
+        const placedN = placed.length;
+        const avgPkg = placed.reduce((a, s) => a + (s.package || 0), 0) / (placedN || 1);
+
+        // trend: simple distribution across recent years (best-effort)
+        const yearMap: Record<number, { placements: number; total: number; pkgSum: number }> = {};
+        for (let y = 2020; y <= 2024; y++) yearMap[y] = { placements: 0, total: 0, pkgSum: 0 };
+        studs.forEach((s, i) => {
+          const yr = 2020 + (i % 5);
+          yearMap[yr].total++;
+          if (s.status === "Placed") {
+            yearMap[yr].placements++;
+            yearMap[yr].pkgSum += s.package || 0;
+          }
+        });
+
+        const trend = Object.entries(yearMap)
+          .sort(([a], [b]) => Number(a) - Number(b))
+          .map(([year, v]) => ({
+            year: Number(year),
+            placements: v.placements,
+            placement_rate: Math.round((v.placements / (v.total || 1)) * 1000) / 10,
+            avg_package: Math.round((v.pkgSum / (v.placements || 1)) * 100) / 100,
+          }));
+
+        const branchMap: Record<string, { placed: number; total: number }> = {};
+        studs.forEach(s => {
+          const branch = s.branch || "Unknown";
+          if (!branchMap[branch]) branchMap[branch] = { placed: 0, total: 0 };
+          branchMap[branch].total++;
+          if (s.status === "Placed") branchMap[branch].placed++;
+        });
+
+        const branches = Object.entries(branchMap).map(([branch, v]) => ({
+          branch,
+          placements: v.placed,
+          total: v.total,
+          rate: Math.round((v.placed / v.total) * 1000) / 10,
+        }));
+
+        const compMap: Record<string, { selected: number; pkgSum: number; total: number }> = {};
+        studs.forEach(s => {
+          if (!s.company) return;
+          if (!compMap[s.company]) compMap[s.company] = { selected: 0, pkgSum: 0, total: 0 };
+          compMap[s.company].total++;
+          if (s.status === "Placed") {
+            compMap[s.company].selected++;
+            compMap[s.company].pkgSum += s.package || 0;
+          }
+        });
+
+        const company_stats = Object.entries(compMap)
+          .map(([company, v]) => ({
+            company,
+            applicants: v.total,
+            selected: v.selected,
+            avg_package: Math.round((v.pkgSum / (v.selected || 1)) * 100) / 100,
+            selection_rate: Math.round((v.selected / v.total) * 1000) / 10,
+          }))
+          .sort((a, b) => b.selected - a.selected);
+
+        return {
+          kpi: {
+            total_students: total,
+            placed_students: placedN,
+            companies: compsList.length,
+            avg_package: Math.round(avgPkg * 100) / 100,
+            placement_rate: Math.round((placedN / (total || 1)) * 1000) / 10,
+          },
+          trend,
+          branches,
+          company_stats,
+        };
+      }
+
+      const realAnalytics = computeAnalytics(fetchedStudents, fetchedCompanies, fetchedDrives);
+
       // If database has no entries, seed with mock sets so the portal looks full at first
       if (fetchedCompanies.length === 0) {
         setCompanies(MOCK_COMPANIES);
@@ -165,6 +272,9 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
       } else {
         setDrives(fetchedDrives);
       }
+
+      setStudents(fetchedStudents.length ? fetchedStudents : MOCK_STUDENTS);
+      setAnalytics((old) => fetchedStudents.length ? realAnalytics : old);
     } catch (err) {
       console.error("Supabase placements load error:", err);
       // Fallback
@@ -197,78 +307,119 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
   const isStudent = userRole.toLowerCase() === "student" || userRole.toLowerCase() === "parent";
 
   return (
-    <div className="space-y-6">
-      {isStudent ? (
-        <StudentPortalView
-          userName={userName}
-          userId={userId}
-          attendancePercent={dbAttendancePercent}
-          companies={companies}
-          drives={drives}
-          studentApplications={studentApplications}
-          setStudentApplications={setStudentApplications}
-        />
-      ) : (
-        <div className="space-y-6">
-          {/* Tabs bar */}
-          <div className="border-b border-slate-200">
-            <nav className="flex space-x-6 overflow-x-auto no-scrollbar">
-              {[
-                { id: "overview", label: "Overview" },
-                { id: "students", label: "Students Database" },
-                { id: "companies", label: "Companies" },
-                { id: "drives", label: "Drives" },
-                { id: "interview", label: "Mock Interview" },
-                { id: "comms", label: "Communication Coach" },
-                { id: "predictor", label: "Placement Predictor" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as TabType)}
-                  className={`py-3 px-1 border-b-2 font-semibold text-sm whitespace-nowrap transition-colors ${
-                    activeTab === tab.id
-                      ? "border-violet-600 text-violet-600"
-                      : "border-transparent text-slate-400 hover:text-slate-600"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-          </div>
+    <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/10 p-6 shadow-[0_40px_120px_-50px_rgba(99,102,241,0.18)] backdrop-blur-xl before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.16),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_42%)] before:pointer-events-none">
+      <div className="relative space-y-6">
+        {isStudent ? (
+          <StudentPortalView
+            userName={userName}
+            userId={userId}
+            attendancePercent={dbAttendancePercent}
+            companies={companies}
+            drives={drives}
+            students={students}
+            studentApplications={studentApplications}
+            setStudentApplications={setStudentApplications}
+          />
+        ) : (
+          <div className="space-y-6">
+            {/* Tabs bar */}
+            <div className="border-b border-white/10 backdrop-blur-xl">
+              <nav className="flex space-x-6 overflow-x-auto no-scrollbar bg-slate-950/10 px-2 py-3 rounded-[1.5rem] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.3)]">
+                {
+                  (() => {
+                    const roleKey = (userRole || "STUDENT").toLowerCase();
+                    let tabs: { id: TabType; label: string }[] = [];
 
-          {/* Render Tab Contents */}
-          {activeTab === "overview" && (
-            <OverviewTabView analytics={analytics} />
-          )}
-          {activeTab === "students" && (
-            <StudentsTabView students={MOCK_STUDENTS} />
-          )}
-          {activeTab === "companies" && (
-            <CompaniesTabView
-              companies={companies}
-              refreshData={fetchPlacementsData}
-              analytics={analytics}
-            />
-          )}
-          {activeTab === "drives" && (
-            <DrivesTabView
-              drives={drives}
-              companies={companies}
-              refreshData={fetchPlacementsData}
-            />
-          )}
-          {activeTab === "interview" && (
-            <InterviewTabView />
-          )}
-          {activeTab === "comms" && (
-            <CommsTabView />
-          )}
-          {activeTab === "predictor" && (
-            <PredictorTabView students={MOCK_STUDENTS} defaultAttendance={dbAttendancePercent} />
-          )}
-        </div>
-      )}
+                    if (roleKey.includes("student") || roleKey.includes("parent")) {
+                      tabs = [
+                        { id: "predictor", label: "Placement Predictor" },
+                        { id: "drives", label: "Placement Drives" },
+                        { id: "interview", label: "Mock Interview" },
+                      ];
+                    } else if (roleKey.includes("faculty")) {
+                      tabs = [
+                        { id: "overview", label: "Overview" },
+                        { id: "students", label: "Students Database" },
+                        { id: "drives", label: "Drives" },
+                        { id: "predictor", label: "Placement Predictor" },
+                      ];
+                    } else if (roleKey.includes("institution") || roleKey.includes("org") || roleKey.includes("hod") || roleKey.includes("program")) {
+                      tabs = [
+                        { id: "overview", label: "Overview" },
+                        { id: "students", label: "Students Database" },
+                        { id: "companies", label: "Companies" },
+                        { id: "drives", label: "Drives" },
+                        { id: "predictor", label: "Placement Predictor" },
+                      ];
+                    } else if (roleKey.includes("super")) {
+                      tabs = [
+                        { id: "overview", label: "Overview" },
+                        { id: "students", label: "Students Database" },
+                        { id: "companies", label: "Companies" },
+                        { id: "drives", label: "Drives" },
+                        { id: "predictor", label: "Placement Predictor" },
+                        { id: "comms", label: "Communication Coach" },
+                        { id: "interview", label: "Mock Interview" },
+                      ];
+                    } else {
+                      tabs = [
+                        { id: "overview", label: "Overview" },
+                        { id: "companies", label: "Companies" },
+                        { id: "drives", label: "Drives" },
+                      ];
+                    }
+
+                    return tabs.map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as TabType)}
+                        className={`py-3 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
+                          activeTab === tab.id
+                            ? "border border-violet-500/30 bg-violet-500/10 text-violet-200 shadow-sm"
+                            : "border border-transparent text-slate-400 hover:border-white/15 hover:bg-white/5 hover:text-slate-100"
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ));
+                  })()
+                }
+              </nav>
+            </div>
+
+            {/* Render Tab Contents */}
+            {activeTab === "overview" && (
+              <OverviewTabView analytics={analytics} />
+            )}
+            {activeTab === "students" && (
+              <StudentsTabView students={students.length ? students : MOCK_STUDENTS} />
+            )}
+            {activeTab === "companies" && (
+              <CompaniesTabView
+                companies={companies}
+                refreshData={fetchPlacementsData}
+                analytics={analytics}
+              />
+            )}
+            {activeTab === "drives" && (
+              <DrivesTabView
+                drives={drives}
+                companies={companies}
+                refreshData={fetchPlacementsData}
+              />
+            )}
+            {activeTab === "interview" && (
+              <InterviewTabView />
+            )}
+            {activeTab === "comms" && (
+              <CommsTabView />
+            )}
+            {activeTab === "predictor" && (
+              <PredictorTabView students={students.length ? students : MOCK_STUDENTS} defaultAttendance={dbAttendancePercent} />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -282,6 +433,7 @@ function StudentPortalView({
   attendancePercent,
   companies,
   drives,
+  students,
   studentApplications,
   setStudentApplications,
 }: {
@@ -290,14 +442,15 @@ function StudentPortalView({
   attendancePercent: number;
   companies: Company[];
   drives: Drive[];
+  students: Student[];
   studentApplications: any[];
   setStudentApplications: React.Dispatch<React.SetStateAction<any[]>>;
 }) {
   const [subTab, setSubTab] = useState<"drives" | "interview" | "predictor">("predictor");
 
-  const studentProfile = MOCK_STUDENTS[0]; // fallback template info
-  const avgSgpa = Object.values(studentProfile.sgpa).reduce((a, b) => a + b, 0) / 8;
-  const activeBacklogs = Object.values(studentProfile.backlogs).reduce((a, b) => a + b, 0);
+  const studentProfile = (students && students.find(s => s.student_id === userId)) || MOCK_STUDENTS[0];
+  const avgSgpa = studentProfile?.sgpa ? (Object.values(studentProfile.sgpa).reduce((a, b) => a + b, 0) / Object.values(studentProfile.sgpa).length) : 0;
+  const activeBacklogs = studentProfile?.backlogs ? Object.values(studentProfile.backlogs).reduce((a, b) => a + b, 0) : 0;
 
   const handleApply = async (driveId: string) => {
     if (!userId) {
@@ -330,12 +483,12 @@ function StudentPortalView({
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Avg CGPA" value={avgSgpa.toFixed(2)} icon={<GraduationCap size={15} />} />
-        <StatCard label="Database Attendance" value={`${attendancePercent}%`} icon={<Percent size={15} />} accent="bg-emerald-50 text-emerald-600" />
+        <StatCard label="Attendance" value={`${attendancePercent}%`} icon={<Percent size={15} />} accent="bg-emerald-50 text-emerald-600" />
         <StatCard label="Active Backlogs" value={activeBacklogs} icon={<AlertTriangle size={15} />} accent="bg-amber-50 text-amber-600" />
-        <StatCard label="Applied Openings" value={studentApplications.length} icon={<Award size={15} />} accent="bg-indigo-50 text-indigo-600" />
+        <StatCard label={drives.length ? "Applied Openings" : "Active Drives"} value={drives.length ? studentApplications.length : "No active drives"} icon={<Award size={15} />} accent="bg-indigo-50 text-indigo-600" />
       </div>
 
-      <div className="flex bg-slate-100 p-1 rounded-lg w-fit">
+      <div className="flex bg-white/10 p-1 rounded-full shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] w-fit backdrop-blur-xl">
         {[
           { id: "predictor", label: "Predictor & Insights" },
           { id: "drives", label: "Placement Drives" },
@@ -344,10 +497,10 @@ function StudentPortalView({
           <button
             key={tab.id}
             onClick={() => setSubTab(tab.id as any)}
-            className={`px-4 py-2 rounded-md text-xs font-semibold transition-all ${
+            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
               subTab === tab.id
-                ? "bg-white text-violet-600 shadow-sm"
-                : "text-slate-500 hover:text-slate-700"
+                ? "bg-white/90 text-slate-950 shadow-sm"
+                : "text-slate-300 hover:bg-white/10 hover:text-slate-100"
             }`}
           >
             {tab.label}
@@ -489,7 +642,7 @@ function OverviewTabView({ analytics }: { analytics: any }) {
           </Button>
         </div>
         {aiAnswer && (
-          <div className="mt-4 p-4 rounded-lg bg-white border border-slate-100 text-sm text-slate-600 leading-relaxed shadow-sm">
+          <div className="mt-4 p-4 rounded-3xl bg-slate-950/70 border border-white/10 text-sm text-slate-200 leading-relaxed shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)]">
             {aiAnswer}
           </div>
         )}
@@ -704,8 +857,8 @@ function CompaniesTabView({
                   onClick={() => { setSelected(isActive ? null : c.name); setAiA(""); setAiQ(""); }}
                   className={`w-full text-left p-4 rounded-xl border transition-all ${
                     isActive
-                      ? "border-violet-400 bg-violet-50/20 shadow-sm"
-                      : "border-slate-100 bg-white hover:border-slate-200"
+                      ? "border-violet-400 bg-violet-500/10 shadow-sm text-white"
+                      : "border-white/10 bg-slate-950/50 text-slate-200 hover:border-white/20 hover:bg-white/5"
                   }`}
                 >
                   <div className="flex justify-between items-center">
@@ -755,7 +908,7 @@ function CompaniesTabView({
                   </Button>
                 </div>
                 {aiA && (
-                  <div className="mt-3 p-4 rounded-lg bg-white border border-slate-100 text-xs text-slate-500 leading-relaxed shadow-sm">
+                  <div className="mt-3 p-4 rounded-3xl bg-slate-950/70 border border-white/10 text-xs text-slate-200 leading-relaxed shadow-[0_20px_60px_-20px_rgba(15,23,42,0.35)]">
                     {aiA}
                   </div>
                 )}
@@ -870,7 +1023,7 @@ function DrivesTabView({
               </Badge>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-xs font-medium text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 text-xs font-medium text-slate-300 bg-white/5 p-4 rounded-3xl border border-white/10">
               <p><strong>Package:</strong> ₹{d.ctc} LPA</p>
               <p><strong>Deadline:</strong> {d.created_at}</p>
               <p><strong>Skills:</strong> {d.skills_required}</p>
@@ -1383,7 +1536,9 @@ function PredictorTabView({
   const [sgpa, setSgpa] = useState<number>(8.0);
   const [backlogs, setBacklogs] = useState<number>(0);
   const [attendance, setAttendance] = useState<number>(defaultAttendance);
-  const [skills, setSkills] = useState<string>("Python, React, SQL");
+  const [skillsTags, setSkillsTags] = useState<string[]>([]);
+  const [skillInput, setSkillInput] = useState("");
+  const [aiExplanation, setAiExplanation] = useState<string>("");
   const [prediction, setPrediction] = useState<PredictionResult | null>(null);
 
   // Sync with default attendance
@@ -1395,26 +1550,26 @@ function PredictorTabView({
     if (selectedStudentId) {
       const match = students.find(s => s.student_id === selectedStudentId);
       if (match) {
-        const sVal = Object.values(match.sgpa).reduce((a, b) => a + b, 0) / 8;
-        const aVal = Object.values(match.attendance).reduce((a, b) => a + b, 0) / 8;
-        const bVal = Object.values(match.backlogs).reduce((a, b) => a + b, 0);
-        setSgpa(parseFloat(sVal.toFixed(2)));
-        setAttendance(parseFloat(aVal.toFixed(1)));
-        setBacklogs(bVal);
-        setSkills(match.skills);
-      }
+          const sVal = match.sgpa ? (Object.values(match.sgpa).reduce((a, b) => a + b, 0) / Object.values(match.sgpa).length) : 8.0;
+          const aVal = match.attendance ? (Object.values(match.attendance).reduce((a, b) => a + b, 0) / Object.values(match.attendance).length) : defaultAttendance;
+          const bVal = match.backlogs ? Object.values(match.backlogs).reduce((a, b) => a + b, 0) : 0;
+          setSgpa(parseFloat(sVal.toFixed(2)));
+          setAttendance(parseFloat(aVal.toFixed(1)));
+          setBacklogs(bVal);
+          setSkillsTags((match.skills || "").split(",").map((s: string) => s.trim()).filter(Boolean));
+        }
     }
   }, [selectedStudentId, students]);
 
   function runPrediction() {
-    const sc = skills.split(",").map(x => x.trim()).filter(Boolean).length;
+    const sc = skillsTags.length;
     const res = predictPlacementProbability(sgpa, backlogs, attendance, sc);
     setPrediction(res);
   }
 
   useEffect(() => {
     runPrediction();
-  }, [sgpa, backlogs, attendance, skills]);
+  }, [sgpa, backlogs, attendance, skillsTags]);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1463,83 +1618,107 @@ function PredictorTabView({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1">Competencies (Comma separated)</label>
-              <Input value={skills} onChange={e => setSkills(e.target.value)} placeholder="Python, React, AWS..." />
+              <label className="block text-xs font-bold text-slate-500 mb-1">Competencies</label>
+              <div className="flex flex-wrap gap-2">
+                {skillsTags.map((t, idx) => (
+                  <button key={t + idx} className="px-2 py-1 rounded-full bg-slate-100 text-xs flex items-center gap-2">
+                    <span>{t}</span>
+                    <span className="text-slate-400 cursor-pointer" onClick={() => setSkillsTags(prev => prev.filter(x => x !== t))}>×</span>
+                  </button>
+                ))}
+                <input
+                  value={skillInput}
+                  onChange={e => setSkillInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter" && skillInput.trim()) {
+                      e.preventDefault();
+                      setSkillsTags(prev => [...prev, skillInput.trim()]);
+                      setSkillInput("");
+                    }
+                  }}
+                  placeholder="Add skill and press Enter"
+                  className="text-xs px-2 py-1 rounded-md border border-slate-200"
+                />
+              </div>
             </div>
 
-            <Button className="w-full" onClick={runPrediction}>Run Analysis Engine</Button>
+            <Button className="w-full" onClick={async () => {
+              // Button now fetches AI explanation for the current prediction
+              if (!prediction) return;
+              setAiExplanation("");
+              try {
+                const res = await fetch("/api/ai/chat", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ prompt: `Explain this placement prediction and provide tailored improvement steps. Inputs: sgpa=${sgpa}, backlogs=${backlogs}, attendance=${attendance}, skills=${skillsTags.join(", ")}, score=${prediction.probability}` }),
+                });
+                const j = await res.json();
+                setAiExplanation(j.text || j.answer || "AI explanation unavailable.");
+              } catch (err) {
+                setAiExplanation("AI request failed.");
+              }
+            }}>Explain Prediction</Button>
           </div>
         </Card>
       </div>
 
       <div className="lg:col-span-2 space-y-4">
         {prediction && (
-          <>
-            <div className="flex flex-col md:flex-row items-center gap-6 bg-white border border-slate-100 p-6 rounded-xl shadow-sm">
-              <div className="relative w-28 h-28 flex items-center justify-center">
-                <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-                  <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
-                  <circle
-                    cx="18" cy="18" r="16" fill="none"
-                    stroke={
-                      prediction.tier === "High"
-                        ? "#10b981"
-                        : prediction.tier === "Medium"
-                        ? "#f59e0b"
-                        : prediction.tier === "Low"
-                        ? "#f97316"
-                        : "#ef4444"
-                    }
-                    strokeWidth="2.5"
-                    strokeDasharray={`${prediction.probability} 100`}
-                    strokeLinecap="round"
-                    className="transition-all duration-500 ease-out"
-                  />
-                </svg>
-                <div className="absolute flex flex-col items-center justify-center">
-                  <span className="text-2xl font-black text-slate-800 leading-none">{prediction.probability}%</span>
-                  <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Likelihood</span>
-                </div>
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <div className="flex-1 bg-white border border-slate-100 p-6 rounded-xl shadow-sm">
+              <div className="flex items-center gap-2">
+                <h4 className="font-bold text-slate-800 text-base">Prediction Evaluation</h4>
+                <Badge
+                  variant={prediction.probability >= 75 ? "success" : prediction.probability >= 50 ? "warning" : "danger"}
+                >
+                  {prediction.probability >= 75 ? "High" : prediction.probability >= 50 ? "Medium" : "Low"} Confidence
+                </Badge>
               </div>
-
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-slate-800 text-base">Prediction Evaluation</h4>
-                  <Badge
-                    variant={
-                      prediction.tier === "High"
-                        ? "success"
-                        : prediction.tier === "Medium"
-                        ? "warning"
-                        : prediction.tier === "Low"
-                        ? "warning"
-                        : "danger"
-                    }
-                  >
-                    {prediction.tier} Confidence
-                  </Badge>
-                </div>
-                <p className="text-xs text-slate-400 font-semibold mt-1">
-                  Based on Decision Forest simulations trained on university recruitment histories.
-                </p>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium mt-3">
-                  This student displays a <strong>{prediction.probability}%</strong> chance of securing placement in standard recruitment drives. This model calculates academic CGPA, backlog counts, attendance buffers, and active technical competencies to evaluate candidate score against historical selection boundaries.
-                </p>
-              </div>
+              <p className="text-xs text-slate-400 font-semibold mt-1">Based on Decision Forest simulations trained on university recruitment histories.</p>
+              <p className="text-xs text-slate-500 leading-relaxed font-medium mt-3">This student displays a <strong>{prediction.probability}%</strong> chance of securing placement in standard recruitment drives.</p>
             </div>
 
-            <Card>
-              <h4 className="font-bold text-sm text-slate-800 mb-3">AI Actionable Improvement Plan</h4>
-              <div className="space-y-2.5">
-                {prediction.suggestions.map((item, index) => (
-                  <div key={index} className="flex gap-2.5 items-start p-3 bg-slate-50 rounded-xl border border-slate-100/50 text-xs font-semibold leading-relaxed text-slate-600">
-                    <span className="text-violet-600 font-bold shrink-0 mt-0.5">✓</span>
-                    <p>{item}</p>
+            <div className="w-72">
+              <div className="bg-white border border-slate-100 p-4 rounded-xl mb-4 flex items-center justify-center">
+                <div className="relative w-24 h-24 flex items-center justify-center">
+                  <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" strokeWidth="2.5" />
+                    <circle
+                      cx="18" cy="18" r="16" fill="none"
+                      stroke={prediction.probability >= 75 ? "#10b981" : prediction.probability >= 50 ? "#f59e0b" : "#ef4444"}
+                      strokeWidth="2.5"
+                      strokeDasharray={`${prediction.probability} ${100 - prediction.probability}`}
+                      strokeLinecap="round"
+                      style={{ transition: "stroke-dasharray 450ms ease-out, stroke 350ms" }}
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center justify-center">
+                    <span className="text-xl font-black text-slate-800 leading-none">{prediction.probability}%</span>
+                    <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Likelihood</span>
                   </div>
-                ))}
+                </div>
               </div>
-            </Card>
-          </>
+
+              <Card>
+                <h4 className="font-bold text-sm text-slate-800 mb-3">AI Actionable Improvement Plan</h4>
+                <div className="space-y-2.5">
+                  {prediction.suggestions.map((item, index) => (
+                    <div key={index} className="flex gap-2.5 items-start p-3 bg-slate-50 rounded-xl border border-slate-100/50 text-xs font-semibold leading-relaxed text-slate-600">
+                      <span className="text-violet-600 font-bold shrink-0 mt-0.5">✓</span>
+                      <p>{item}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {aiExplanation && (
+                  <div className="mt-4 p-3 bg-white border border-slate-100 rounded-md text-sm text-slate-700">
+                    <h5 className="font-bold text-sm mb-2">AI Explanation</h5>
+                    <div className="text-xs leading-relaxed">{aiExplanation}</div>
+                  </div>
+                )}
+              </Card>
+            </div>
+          </div>
         )}
       </div>
     </div>

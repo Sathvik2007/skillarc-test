@@ -24,27 +24,27 @@ export default async function ProgramsPage() {
 
   const institutionId = profile.institution_id
 
-  const { data: programsData } = await supabase
-    .from("programs")
-    .select(`
-      *,
-      department:department_id(
-        id,
-        name
-      )
-    `)
-    .eq("institution_id", institutionId)
-    .order("name")
+  const [programsRes, departmentsRes] = await Promise.all([
+    supabase
+      .from("programs")
+      .select(`
+        *,
+        department:department_id(
+          id,
+          name
+        )
+      `)
+      .eq("institution_id", institutionId)
+      .order("name"),
+    supabase
+      .from("departments")
+      .select("id,name")
+      .eq("institution_id", institutionId)
+      .order("name"),
+  ])
 
-  const programs = programsData ?? []
-
-  const { data: departmentsData } = await supabase
-    .from("departments")
-    .select("id,name")
-    .eq("institution_id", institutionId)
-    .order("name")
-
-  const departments = departmentsData ?? []
+  const programs = programsRes.data ?? []
+  const departments = departmentsRes.data ?? []
 
   return (
     <ProgramsClientPage
