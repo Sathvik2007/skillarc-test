@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
+import { inviteUser } from "@/lib/invite-user"
 
 const STUDENT_SELECT = `
   *,
@@ -81,23 +82,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const origin = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"
-
-    const inviteResponse = await fetch(`${origin}/api/invite-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        role: ROLES.STUDENT,
-        institutionId: institution_id,
-        organizationId: profile.organization_id,
-      }),
+    await inviteUser({
+      email,
+      role: ROLES.STUDENT,
+      institutionId: institution_id,
+      organizationId: profile.organization_id,
     })
-
-    if (!inviteResponse.ok) {
-      const err = await inviteResponse.json().catch(() => ({}))
-      throw new Error(err.error || "Failed to send invite")
-    }
 
     const { data: invitedUser, error: invitedUserError } = await supabase
       .from("users")

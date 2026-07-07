@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
 import { ROLES } from "@/constants/roles"
 import { clearInstitutionName } from "@/app/dashboard/faculty/components/faculty-cache-v2"
-import { getRequestAppOrigin, readResponseError } from "@/lib/invite-user"
+import { getRequestAppOrigin, inviteUser } from "@/lib/invite-user"
 
 export async function createInstitution(data: {
   name: string
@@ -34,27 +34,18 @@ export async function createInstitution(data: {
   if (error) throw error
 
   const origin = await getRequestAppOrigin()
-  let res: Response
 
   try {
-    res = await fetch(`${origin}/api/invite-user`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: data.adminEmail,
-        role: ROLES.INSTITUTION_ADMIN,
-        institutionId: inst.id,
-        organizationId: profile.organization_id,
-      }),
+    await inviteUser({
+      email: data.adminEmail,
+      role: ROLES.INSTITUTION_ADMIN,
+      institutionId: inst.id,
+      organizationId: profile.organization_id,
+      origin,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error("[org-admin] invite request failed", error)
-    throw new Error("Unable to reach invite service")
-  }
-
-  if (!res.ok) {
-    const message = await readResponseError(res, "Failed to invite admin")
-    throw new Error(message)
+    throw new Error(error.message || "Failed to invite admin")
   }
 
   revalidatePath("/dashboard/org-admin")

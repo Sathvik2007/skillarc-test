@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { createSupabaseAdminClient } from "./supabase-admin"
 
 export function resolveAppOrigin(headersValue?: Headers | { get(name: string): string | null } | null): string {
   const configuredOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim()
@@ -54,4 +55,78 @@ export async function readResponseError(response: Response, fallback = "Request 
   }
 
   return fallback
+}
+
+export async function inviteUser(params: {
+  email: string
+  role: string
+  institutionId: string
+  organizationId: string
+  origin?: string
+}) {
+  const { email, role, institutionId, organizationId, origin: passedOrigin } = params
+  const supabase = createSupabaseAdminClient()
+  const origin = passedOrigin || resolveAppOrigin()
+  const redirectTo = `${origin}/auth/callback`
+
+  const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers()
+  if (listError) {
+    console.error("🔴 Error listing users:", listError)
+    throw new Error("Failed to check existing users: " + listError.message)
+  }
+
+  const existing = existingUsers?.users?.find(u => u.email === email)
+
+  if (existing) {
+    console.log(`📧 User exists (${email}), upserting to users table with role: ${role}`)
+    const { error: upsertError } = await supabase.from("users").upsert({
+      id: existing.id,
+      email,
+      role,
+      institution_id: institutionId,
+      organization_id: organizationId,
+      name: email.split("@")[0], // Use email prefix as default name
+    }, { onConflict: "id" })
+    
+    if (upsertError) {
+      console.error("🔴 Upsert error:", upsertError)
+      throw new Error(upsertError.message)
+    }
+
+    const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, { redirectTo })
+    if (inviteError) {
+      console.error("🔴 Invite error:", inviteError)
+      throw new Error(inviteError.message)
+    }
+
+    return { success: true, message: "Existing user invited" }
+  }
+
+  console.log(`📧 Creating new invite for ${email} with role: ${role}`)
+  const { data, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, { redirectTo })
+  if (inviteError) {
+    console.error("🔴 Invite error:", inviteError)
+    throw new Error(inviteError.message)
+  }
+
+  if (!data?.user?.id) {
+    throw new Error("Failed to create user")
+  }
+
+  console.log(`✅ User invited, inserting to users table with id: ${data.user.id}, role: ${role}`)
+  const { error: insertError } = await supabase.from("users").insert({
+    id: data.user.id,
+    email,
+    role,
+    institution_id: institutionId,
+    organization_id: organizationId,
+    name: email.split("@")[0], // Use email prefix as default name
+  })
+
+  if (insertError) {
+    console.error("🔴 Insert error:", insertError)
+    throw new Error(insertError.message)
+  }
+
+  return { success: true, message: "Invitation sent successfully" }
 }

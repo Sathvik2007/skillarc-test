@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
+import { inviteUser } from "@/lib/invite-user"
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,30 +36,12 @@ export async function POST(request: NextRequest) {
 
     // Steps 1 & 2: createUser() block removed.
     // Step 3: delegate auth + user creation to the shared invite API
-    const origin =
-      process.env.NEXT_PUBLIC_APP_URL ??
-      "http://localhost:3000"
-
-    const inviteResponse = await fetch(
-      `${origin}/api/invite-user`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          role: ROLES.FACULTY,
-          institutionId: institution_id,
-          organizationId: profile.organization_id,
-        }),
-      }
-    )
-
-    if (!inviteResponse.ok) {
-      const err = await inviteResponse.json()
-      throw new Error(err.error)
-    }
+    await inviteUser({
+      email,
+      role: ROLES.FACULTY,
+      institutionId: institution_id,
+      organizationId: profile.organization_id,
+    })
 
     // Patch in the extra faculty fields (name, department) that invite-user doesn't set
     const { data: faculty, error } = await supabase
