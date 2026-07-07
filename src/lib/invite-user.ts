@@ -32,3 +32,26 @@ export async function getRequestAppOrigin() {
   const headerStore = await headers()
   return resolveAppOrigin(headerStore)
 }
+
+export async function readResponseError(response: Response, fallback = "Request failed") {
+  try {
+    const contentType = response.headers.get("content-type") || ""
+
+    if (contentType.includes("application/json")) {
+      const data = await response.json()
+
+      if (typeof data === "string") return data
+      if (data && typeof data === "object" && "error" in data) {
+        const errorValue = (data as { error?: unknown }).error
+        if (typeof errorValue === "string") return errorValue
+      }
+    }
+
+    const text = await response.text()
+    if (text?.trim()) return text
+  } catch (error) {
+    console.warn("[invite-user] failed to parse error response", error)
+  }
+
+  return fallback
+}

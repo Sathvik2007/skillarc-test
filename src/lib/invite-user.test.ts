@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import test from "node:test"
 
-import { resolveAppOrigin } from "./invite-user"
+import { readResponseError, resolveAppOrigin } from "./invite-user"
 
 test("resolves Vercel host when public app URL is missing", () => {
   const original = process.env.NEXT_PUBLIC_APP_URL
@@ -35,4 +35,14 @@ test("strips trailing slash from configured app URL", () => {
     if (originalVercel === undefined) delete process.env.VERCEL_URL
     else process.env.VERCEL_URL = originalVercel
   }
+})
+
+test("returns a fallback message when the error response body is empty", async () => {
+  const response = new Response("", {
+    status: 500,
+    headers: { "content-type": "application/json" },
+  })
+
+  const message = await readResponseError(response, "Failed to invite admin")
+  assert.equal(message, "Failed to invite admin")
 })
