@@ -2,221 +2,86 @@
 
 import { useRouter } from "next/navigation"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
 export default function Home() {
   const router = useRouter()
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      backgroundColor: "#f4f5f7",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: font,
-      padding: 24,
-      position: "relative",
-      overflow: "hidden",
-    }}>
-
-      {/* Background decorative blobs */}
-      <div style={{
-        position: "absolute", top: -120, right: -120,
-        width: 400, height: 400, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(29,78,216,0.08) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-      <div style={{
-        position: "absolute", bottom: -100, left: -100,
-        width: 350, height: 350, borderRadius: "50%",
-        background: "radial-gradient(circle, rgba(30,58,95,0.06) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-
-      <div style={{
-        width: "100%",
-        maxWidth: 960,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 0,
-      }}>
-
-        {/* Top nav bar */}
-        <div style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: 72,
-        }}>
-          {/* Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "linear-gradient(135deg, #1e3a5f, #1d4ed8)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <span style={{ fontSize: 17 }}>📅</span>
-            </div>
-            <span style={{ fontSize: 18, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
-              SkillArc
-            </span>
-          </div>
-
-          {/* Nav actions */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <button
-              onClick={() => router.push("/auth/login")}
-              style={{
-                padding: "8px 18px", fontSize: 12, fontWeight: 600,
-                color: "#374151", backgroundColor: "transparent",
-                border: "1px solid #e5e7eb", borderRadius: 10,
-                cursor: "pointer", fontFamily: font,
-              }}
-            >
-              Sign in
-            </button>
-            <button
-              onClick={() => router.push("/signup")}
-              style={{
-                padding: "8px 18px", fontSize: 12, fontWeight: 700,
-                color: "#ffffff", backgroundColor: "#1d4ed8",
-                border: "none", borderRadius: 10,
-                cursor: "pointer", fontFamily: font,
-              }}
-            >
-              Get started
-            </button>
-          </div>
-        </div>
-
-        {/* Hero */}
-        <div style={{ textAlign: "center", maxWidth: 640 }}>
-          {/* Badge */}
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 8,
-            backgroundColor: "#eff6ff", border: "1px solid #bfdbfe",
-            borderRadius: 999, padding: "5px 14px", marginBottom: 28,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#1d4ed8", display: "inline-block" }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: "#1d4ed8", letterSpacing: "0.04em" }}>
-              Now live — Academic LMS Platform
-            </span>
-          </div>
-
-          <h1 style={{
-            fontSize: 52, fontWeight: 900, color: "#111827",
-            lineHeight: 1.1, letterSpacing: "-0.03em", marginBottom: 20,
-          }}>
-            Academic Operations,{" "}
-            <span style={{
-              background: "linear-gradient(135deg, #1e3a5f, #1d4ed8)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-            }}>
-              Simplified.
-            </span>
-          </h1>
-
-          <p style={{
-            fontSize: 16, color: "#6b7280", lineHeight: 1.75,
-            marginBottom: 36, maxWidth: 480, margin: "0 auto 36px",
-          }}>
-            Manage timetables, faculty workloads, and student schedules —
-            all in one beautifully simple platform.
-          </p>
-
-          {/* CTA buttons */}
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button
-              onClick={() => router.push("/signup")}
-              style={{
-                padding: "13px 28px", fontSize: 14, fontWeight: 700,
-                color: "#ffffff", backgroundColor: "#1d4ed8",
-                border: "none", borderRadius: 12,
-                cursor: "pointer", fontFamily: font,
-                boxShadow: "0 4px 14px rgba(29,78,216,0.35)",
-              }}
-            >
-              Start for free →
-            </button>
-            <button
-              onClick={() => router.push("/auth/login")}
-              style={{
-                padding: "13px 28px", fontSize: 14, fontWeight: 600,
-                color: "#374151", backgroundColor: "#ffffff",
-                border: "1px solid #e5e7eb", borderRadius: 12,
-                cursor: "pointer", fontFamily: font,
-              }}
-            >
-              Sign in to dashboard
-            </button>
-          </div>
-        </div>
-
-        {/* Feature cards */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-          width: "100%",
-          marginTop: 72,
-        }}>
-          {[
-            {
-              icon: "🗓️",
-              title: "Timetable Builder",
-              desc: "Drag-and-drop schedule builder with conflict detection and live preview.",
-              accent: "#dbeafe",
-              accentText: "#1d4ed8",
-            },
-            {
-              icon: "👨‍🏫",
-              title: "Faculty Management",
-              desc: "Track workloads, assign subjects, and manage faculty availability effortlessly.",
-              accent: "#ede9fe",
-              accentText: "#6d28d9",
-            },
-            {
-              icon: "🎓",
-              title: "Student Schedules",
-              desc: "Auto-generate student timetables and share them instantly across batches.",
-              accent: "#fef3c7",
-              accentText: "#b45309",
-            },
-          ].map((card) => (
-            <div key={card.title} style={{
-              backgroundColor: "#ffffff",
-              borderRadius: 16,
-              padding: 24,
-              boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-              border: "1px solid #f3f4f6",
-            }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10,
-                backgroundColor: card.accent,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                marginBottom: 14, fontSize: 18,
-              }}>
-                {card.icon}
-              </div>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: "#111827", marginBottom: 6 }}>
-                {card.title}
-              </h3>
-              <p style={{ fontSize: 12, color: "#9ca3af", lineHeight: 1.65 }}>
-                {card.desc}
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.16),_transparent_24%),radial-gradient(circle_at_top_right,_rgba(16,185,129,0.08),_transparent_18%),linear-gradient(180deg,#f8fbff,#eff6ff)] py-14 px-4 sm:px-6 lg:px-10">
+      <div className="relative mx-auto flex max-w-6xl flex-col gap-10">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 rounded-full bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.22),_transparent_54%)] blur-3xl" />
+        <div className="relative overflow-hidden rounded-[32px] border border-white/70 bg-white/90 p-8 shadow-[0_32px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="grid gap-8 lg:grid-cols-[1.35fr_0.9fr] lg:items-center">
+            <div className="space-y-6">
+              <span className="inline-flex items-center gap-2 rounded-full bg-indigo-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-indigo-700">
+                <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
+                Academic LMS, redesigned
+              </span>
+              <h1 className="text-5xl font-black tracking-[-0.05em] text-slate-950 sm:text-6xl">
+                Run academic operations with premium clarity.
+              </h1>
+              <p className="max-w-2xl text-base leading-8 text-slate-600">
+                Build timetables, manage faculty, capture attendance, and deliver smooth student workflows in one elegant platform.
               </p>
+              <div className="flex flex-wrap gap-4">
+                <button
+                  onClick={() => router.push("/signup")}
+                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                >
+                  Get started
+                </button>
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300"
+                >
+                  Sign in
+                </button>
+              </div>
             </div>
-          ))}
+            <div className="rounded-[28px] border border-slate-200/80 bg-slate-950/95 p-8 text-white shadow-[0_20px_60px_rgba(15,23,42,0.18)]">
+              <div className="space-y-5">
+                <div className="flex items-center gap-3 text-sm font-semibold text-slate-100">
+                  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-indigo-500/15 text-indigo-200">🚀</span>
+                  Designed for education teams
+                </div>
+                <div className="space-y-4">
+                  <div className="rounded-3xl bg-slate-900/80 p-5">
+                    <p className="text-sm font-semibold text-slate-100">Timetable Builder</p>
+                    <p className="mt-3 text-sm text-slate-400">Smart conflict checks and an easy publish workflow for schedules.</p>
+                  </div>
+                  <div className="rounded-3xl bg-slate-900/80 p-5">
+                    <p className="text-sm font-semibold text-slate-100">Attendance analytics</p>
+                    <p className="mt-3 text-sm text-slate-400">Auto capture presence for meetings and sessions, then review participation stats.</p>
+                  </div>
+                  <div className="rounded-3xl bg-slate-900/80 p-5">
+                    <p className="text-sm font-semibold text-slate-100">Student experience</p>
+                    <p className="mt-3 text-sm text-slate-400">Clear schedules, subject resources, and progress reports for learners.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                title: "Smart scheduling",
+                details: "Drag-and-drop timetable creation with conflict alerts.",
+              },
+              {
+                title: "Meeting attendance",
+                details: "Track who joined and how long they stayed in live sessions.",
+              },
+              {
+                title: "Intuitive reporting",
+                details: "Analytics for students, faculty and institutional operations.",
+              },
+            ].map((item) => (
+              <div key={item.title} className="rounded-3xl border border-slate-200/70 bg-white/90 p-6 shadow-sm">
+                <h2 className="text-sm font-semibold text-slate-950">{item.title}</h2>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{item.details}</p>
+              </div>
+            ))}
+          </div>
         </div>
-
-        {/* Footer note */}
-        <p style={{ fontSize: 11, color: "#d1d5db", marginTop: 48 }}>
-          Built for institutions · Trusted by educators · Powered by SkillArc
-        </p>
-
       </div>
     </div>
   )

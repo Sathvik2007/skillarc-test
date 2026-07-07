@@ -22,10 +22,10 @@ export default function TeacherDashboardClient({
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
 
   const quickActions = [
-    { label: "My Subjects",  desc: "View assigned subjects",  icon: "📘", href: "/dashboard/teacher/subjects" },
-    { label: "Timetable",    desc: "View your schedule",      icon: "📅", href: "/dashboard/timetable-builder" },
-    { label: "Students",     desc: "View your students",      icon: "👩‍🎓", href: "/dashboard/teacher/students" },
-    { label: "Attendance",   desc: "Mark attendance",         icon: "✅", href: "/dashboard/teacher/attendance" },
+    { label: "My Subjects",  desc: "View assigned subjects",  icon: "📘", href: "/dashboard/teacher" },
+    { label: "Timetable",    desc: "View your schedule",      icon: "📅", href: "/dashboard/teacher" },
+    { label: "Students",     desc: "View your students",      icon: "👩‍🎓", href: "/dashboard/teacher" },
+    { label: "Attendance",   desc: "Mark attendance",         icon: "✅", href: "/dashboard/teacher" },
   ]
 
   return (

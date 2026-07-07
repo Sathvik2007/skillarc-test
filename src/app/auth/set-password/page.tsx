@@ -10,27 +10,19 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
 export default function SetPasswordPage() {
   const router = useRouter()
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
-  const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">(
-    "idle"
-  )
+  const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [error, setError] = useState("")
   const [userEmail, setUserEmail] = useState("")
 
   useEffect(() => {
-    // reads #access_token from URL hash and creates session
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user?.email) {
-        console.log("✅ Session user email:", session.user.email)
         setUserEmail(session.user.email)
-      } else {
-        console.warn("⚠️ No session user found")
       }
     }
     getSession()
@@ -47,165 +39,111 @@ export default function SetPasswordPage() {
       setStatus("error")
       return
     }
+
     setStatus("loading")
     setError("")
 
     try {
-      console.log("🔄 Updating password for:", userEmail)
       const { error } = await supabase.auth.updateUser({ password })
       if (error) {
-        console.error("❌ Password update error:", error.message)
         setError(error.message)
         setStatus("error")
         return
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      console.log("👤 Current User:", user)
-
+      const { data: { user } } = await supabase.auth.getUser()
       let redirectPath = "/dashboard"
 
       if (user) {
-        const { data: profile, error: profileError } = await supabase
+        const { data: profile } = await supabase
           .from("users")
           .select("role")
           .eq("id", user.id)
           .single()
 
-        console.log("📋 Current Profile:", profile)
-        console.log("❌ Profile Error:", profileError)
-
-        if (profile?.role === ROLES.STUDENT) {
-          redirectPath = "/dashboard/student"
-        } else if (profile?.role === ROLES.FACULTY) {
-          redirectPath = "/dashboard/faculty"
-        } else if (profile?.role === ROLES.INSTITUTION_ADMIN) {
-          redirectPath = "/dashboard/institution-admin"
-        } else if (profile?.role === ROLES.ORG_ADMIN) {
-          redirectPath = "/dashboard/org-admin"
-        } else if (profile?.role === ROLES.HOD) {
-          redirectPath = "/dashboard/hod"
-        } else if (profile?.role === ROLES.PROGRAM_HEAD) {
-          redirectPath = "/dashboard/program-head"
-        } else if (profile?.role === ROLES.SUPER_ADMIN) {
-          redirectPath = "/dashboard/super-admin"
-        } else if (profile?.role === ROLES.PARENT) {
-          redirectPath = "/dashboard/parent"
-        }
+        if (profile?.role === ROLES.STUDENT) redirectPath = "/dashboard/student"
+        else if (profile?.role === ROLES.FACULTY) redirectPath = "/dashboard/faculty"
+        else if (profile?.role === ROLES.INSTITUTION_ADMIN) redirectPath = "/dashboard/institution-admin"
+        else if (profile?.role === ROLES.ORG_ADMIN) redirectPath = "/dashboard/org-admin"
+        else if (profile?.role === ROLES.HOD) redirectPath = "/dashboard/hod"
+        else if (profile?.role === ROLES.PROGRAM_HEAD) redirectPath = "/dashboard/program-head"
+        else if (profile?.role === ROLES.SUPER_ADMIN) redirectPath = "/dashboard/super-admin"
+        else if (profile?.role === ROLES.PARENT) redirectPath = "/dashboard/parent"
       }
 
-      console.log("✅ Password updated successfully")
       setStatus("success")
-
-      setTimeout(() => {
-        console.log("🚀 Redirecting to:", redirectPath)
-        router.push(redirectPath)
-      }, 1500)
+      setTimeout(() => router.push(redirectPath), 1200)
     } catch (err) {
-      console.error("❌ Unexpected error:", err)
       setError("An unexpected error occurred")
       setStatus("error")
     }
   }
 
   return (
-    <div style={{
-      minHeight: "100vh", display: "flex", alignItems: "center",
-      justifyContent: "center", backgroundColor: "#f9fafb", fontFamily: font,
-    }}>
-      <div style={{
-        backgroundColor: "#fff", borderRadius: 16, padding: 32,
-        boxShadow: "0 1px 8px rgba(0,0,0,0.08)", border: "1px solid #f3f4f6",
-        width: "100%", maxWidth: 400,
-      }}>
-        <h1 style={{ fontSize: 18, fontWeight: 700, color: "#111827", marginBottom: 4 }}>
-          Set your password
-        </h1>
-        <p style={{ fontSize: 12, color: "#9ca3af", marginBottom: 24 }}>
-          Choose a password to activate your account
-        </p>
+    <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.16),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.09),_transparent_18%),linear-gradient(180deg,#f8fbff,#eff6ff)] px-4 py-10">
+      <div className="w-full max-w-md rounded-[32px] border border-slate-200 bg-white/95 p-10 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+        <div className="mb-6">
+          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-indigo-600">Account setup</p>
+          <h1 className="mt-3 text-3xl font-black text-slate-950">Set your password</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-500">Create a secure password to activate your account and continue into SkillArc.</p>
+        </div>
 
         {userEmail && (
-          <p style={{ fontSize: 11, color: "#6b7280", marginBottom: 16, fontStyle: "italic" }}>
-            Setting up: {userEmail}
-          </p>
+          <div className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            Setting up: <span className="font-semibold text-slate-900">{userEmail}</span>
+          </div>
         )}
 
         {status === "success" && (
-          <div style={{
-            backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0",
-            borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-            display: "flex", alignItems: "center", gap: 8,
-          }}>
-            <span>🎉</span>
-            <p style={{ fontSize: 12, color: "#166534", margin: 0, fontWeight: 500 }}>
-              Password set! Redirecting…
-            </p>
+          <div className="mb-6 rounded-3xl bg-emerald-50 p-4 text-sm text-emerald-700">
+            Password set! Redirecting…
           </div>
         )}
 
         {status === "error" && (
-          <div style={{
-            backgroundColor: "#fee2e2", border: "1px solid #fecaca",
-            borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-          }}>
-            <p style={{ fontSize: 12, color: "#991b1b", margin: 0 }}>{error}</p>
+          <div className="mb-6 rounded-3xl bg-rose-50 p-4 text-sm text-rose-700">
+            {error}
           </div>
         )}
 
-        <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-          New Password
-        </label>
-        <input
-          type="password"
-          placeholder="Min. 6 characters"
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          disabled={status === "loading" || status === "success"}
-          style={{
-            width: "100%", padding: "9px 12px", fontSize: 13,
-            border: "1px solid #e5e7eb", borderRadius: 10,
-            backgroundColor: "#f9fafb", color: "#111827",
-            outline: "none", marginBottom: 12, boxSizing: "border-box", fontFamily: font,
-            cursor: status === "loading" || status === "success" ? "not-allowed" : "pointer",
-            opacity: status === "loading" || status === "success" ? 0.6 : 1,
-          }}
-        />
-
-        <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-          Confirm Password
-        </label>
-        <input
-          type="password"
-          placeholder="Repeat password"
-          value={confirm}
-          onChange={e => setConfirm(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleSubmit()}
-          disabled={status === "loading" || status === "success"}
-          style={{
-            width: "100%", padding: "9px 12px", fontSize: 13,
-            border: "1px solid #e5e7eb", borderRadius: 10,
-            backgroundColor: "#f9fafb", color: "#111827",
-            outline: "none", marginBottom: 20, boxSizing: "border-box", fontFamily: font,
-            cursor: status === "loading" || status === "success" ? "not-allowed" : "pointer",
-            opacity: status === "loading" || status === "success" ? 0.6 : 1,
-          }}
-        />
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-semibold text-slate-700">New password</label>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Min. 6 characters"
+              disabled={status === "loading" || status === "success"}
+              className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-70"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-slate-700">Confirm password</label>
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              placeholder="Repeat password"
+              disabled={status === "loading" || status === "success"}
+              className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-70"
+            />
+          </div>
+        </div>
 
         <button
+          type="button"
           onClick={handleSubmit}
           disabled={status === "loading" || status === "success"}
-          style={{
-            width: "100%", padding: "10px 0", fontSize: 13, fontWeight: 700,
-            color: "#ffffff",
-            backgroundColor: status === "loading" ? "#93c5fd" : status === "success" ? "#86efac" : "#1d4ed8",
-            border: "none", borderRadius: 10,
-            cursor: status === "loading" || status === "success" ? "not-allowed" : "pointer",
-            transition: "background 0.15s", fontFamily: font,
-          }}
+          className={
+            `mt-8 w-full rounded-3xl px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 ${
+              status === "success"
+                ? "bg-emerald-600 hover:bg-emerald-700"
+                : "bg-indigo-600 hover:bg-indigo-700"
+            }
+            `
+          }
         >
           {status === "loading" ? "Saving…" : status === "success" ? "✓ Password Set" : "Set Password & Login"}
         </button>

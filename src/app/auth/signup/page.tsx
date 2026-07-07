@@ -5,8 +5,6 @@ import { useRouter } from "next/navigation"
 import { signupAction } from "@/app/actions/auth"
 import { ROLES } from "@/constants/roles"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
 const ROLE_OPTIONS = [
   { value: ROLES.STUDENT, label: "Student" },
   { value: ROLES.FACULTY, label: "Faculty" },
@@ -44,7 +42,7 @@ export default function SignupPage() {
         return
       }
 
-      await router.push("/dashboard")
+      router.push("/dashboard")
     } catch (err) {
       console.error("Signup error:", err)
       setLoading(false)
@@ -52,378 +50,98 @@ export default function SignupPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f4f5f7",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: font,
-        padding: 24,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          maxWidth: 900,
-          borderRadius: 24,
-          overflow: "hidden",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Left — branding */}
-        <div
-          style={{
-            flex: 1,
-            background: "linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%)",
-            padding: 48,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 40,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span style={{ fontSize: 18 }}>📅</span>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.16),_transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.09),_transparent_18%),linear-gradient(180deg,#f8fbff,#eff6ff)] flex items-center justify-center px-4 py-10">
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-8 overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_32px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:grid-cols-[1.2fr_0.9fr]">
+        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-600 via-violet-600 to-sky-600 p-10 text-white">
+          <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.22),_transparent_55%)]" />
+          <div className="relative flex h-full flex-col justify-between gap-10">
+            <div>
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 text-xl">📅</div>
+                <span className="text-sm font-semibold uppercase tracking-[0.22em] text-white/80">SkillArc</span>
               </div>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: "#ffffff",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                SkillArc
-              </span>
+              <h2 className="text-3xl font-black tracking-[-0.04em] text-white">Join your institution on SkillArc.</h2>
+              <p className="mt-4 max-w-sm text-sm leading-7 text-slate-100/80">Create your account and get started with smarter academic management for schedules, users, and classes.</p>
             </div>
-
-            <h2
-              style={{
-                fontSize: 28,
-                fontWeight: 800,
-                color: "#ffffff",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Join your institution
-              <br />
-              on SkillArc.
-            </h2>
-            <p
-              style={{
-                fontSize: 13,
-                color: "rgba(255,255,255,0.6)",
-                marginTop: 12,
-                lineHeight: 1.6,
-              }}
-            >
-              Create your account and get started
-              <br />
-              with smarter academic management.
-            </p>
-          </div>
-
-          {/* Role cards decoration */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            {[
-              {
-                label: "Student",
-                emoji: "🎓",
-                bg: "#d1fae5",
-                text: "#065f46",
-              },
-              {
-                label: "Faculty",
-                emoji: "👨‍🏫",
-                bg: "#ede9fe",
-                text: "#6d28d9",
-              },
-              {
-                label: "Timetable Manager",
-                emoji: "📋",
-                bg: "#dbeafe",
-                text: "#1d4ed8",
-              },
-            ].map((r) => (
-              <div
-                key={r.label}
-                style={{
-                  backgroundColor: r.bg,
-                  borderRadius: 8,
-                  padding: "6px 12px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <span style={{ fontSize: 14 }}>{r.emoji}</span>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: r.text,
-                  }}
-                >
-                  {r.label}
-                </span>
+            <div className="space-y-3 rounded-[26px] bg-white/10 p-6 backdrop-blur">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">Your role</div>
+              <div className="space-y-2">
+                {[
+                  { label: "Student", emoji: "🎓" },
+                  { label: "Faculty", emoji: "👨‍🏫" },
+                  { label: "Timetable Manager", emoji: "📋" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-3 rounded-3xl bg-white/10 p-3">
+                    <span className="text-lg">{item.emoji}</span>
+                    <span className="text-sm font-semibold text-slate-100">{item.label}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-            <p
-              style={{
-                fontSize: 10,
-                color: "rgba(255,255,255,0.4)",
-                marginTop: 4,
-              }}
-            >
-              Role-based access control
-            </p>
+            </div>
           </div>
         </div>
-
-        {/* Right — form */}
-        <div
-          style={{
-            width: 380,
-            backgroundColor: "#ffffff",
-            padding: 48,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "#111827",
-              letterSpacing: "-0.02em",
-              marginBottom: 4,
-            }}
-          >
-            Create account
-          </h1>
-          <p
-            style={{
-              fontSize: 12,
-              color: "#9ca3af",
-              marginBottom: 28,
-            }}
-          >
-            Fill in your details to get started
-          </p>
-
+        <div className="p-10">
+          <div className="mb-8 space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">Create your account</p>
+            <h1 className="text-3xl font-black text-slate-950">Get started with SkillArc</h1>
+            <p className="text-sm text-slate-500">Fill in your details to join your institution and start managing academic operations.</p>
+          </div>
           {error && (
-            <div
-              style={{
-                backgroundColor: "#fee2e2",
-                border: "1px solid #fecaca",
-                borderRadius: 8,
-                padding: "8px 12px",
-                marginBottom: 16,
-              }}
-            >
-              <p style={{ fontSize: 12, color: "#991b1b" }}>{error}</p>
+            <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {error}
             </div>
           )}
-
-          {/* Name */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Full name
-          </label>
-          <input
-            type="text"
-            placeholder="Dr. John Smith"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 16,
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Email */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Email address
-          </label>
-          <input
-            type="email"
-            placeholder="you@institution.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 16,
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Password */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 16,
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Role */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Role
-          </label>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 24,
-              boxSizing: "border-box",
-              cursor: "pointer",
-            }}
-          >
-            {ROLE_OPTIONS.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Submit */}
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Full name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Jane Doe"
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Email address</label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@institution.com"
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Create a strong password"
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Role</label>
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              >
+                {ROLE_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           <button
             onClick={handleSignup}
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: "11px 0",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#ffffff",
-              backgroundColor: loading ? "#93c5fd" : "#1d4ed8",
-              border: "none",
-              borderRadius: 10,
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.15s",
-              marginBottom: 24,
-              fontFamily: font,
-            }}
+            className="mt-10 inline-flex w-full items-center justify-center rounded-3xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {loading ? "Creating account…" : "Create account"}
+            {loading ? "Creating account..." : "Create account"}
           </button>
-
-          <p
-            style={{
-              fontSize: 12,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
-            Already have an account?{" "}
-            <a
-              href="/auth/login"
-              style={{
-                color: "#1d4ed8",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Sign in
-            </a>
-          </p>
         </div>
       </div>
     </div>

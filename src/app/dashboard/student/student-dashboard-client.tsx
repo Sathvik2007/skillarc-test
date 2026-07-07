@@ -1,9 +1,7 @@
 "use client"
 
-import { Activity, AlertCircle, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock, GraduationCap } from "lucide-react"
 import Link from "next/link"
-
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
+import { Activity, AlertCircle, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Clock, GraduationCap } from "lucide-react"
 
 interface Subject {
   id: string
@@ -56,191 +54,136 @@ export default function StudentPage({
       label: "Attendance rate",
       value: `${attendance.rate}%`,
       sublabel: `${attendance.present}/${attendance.total} marked`,
-      accent: "#d1fae5",
-      text: "#065f46",
-      icon: <Activity size={17} color="#065f46" />,
+      accent: "bg-emerald-100 text-emerald-700",
+      icon: <Activity size={18} className="text-emerald-700" />,
     },
     {
       label: "Courses enrolled",
       value: subjects.length,
       sublabel: "Live subject list",
-      accent: "#ede9fe",
-      text: "#6d28d9",
-      icon: <BookOpen size={17} color="#6d28d9" />,
+      accent: "bg-violet-100 text-violet-700",
+      icon: <BookOpen size={18} className="text-violet-700" />,
     },
     {
       label: "Today’s classes",
       value: schedule.length,
       sublabel: "From your section timetable",
-      accent: "#dbeafe",
-      text: "#1d4ed8",
-      icon: <CalendarDays size={17} color="#1d4ed8" />,
+      accent: "bg-sky-100 text-sky-700",
+      icon: <CalendarDays size={18} className="text-sky-700" />,
     },
     {
       label: "Section",
       value: student.sectionName || "—",
       sublabel: student.programName || "Program pending",
-      accent: "#fef3c7",
-      text: "#92400e",
-      icon: <GraduationCap size={17} color="#92400e" />,
+      accent: "bg-amber-100 text-amber-700",
+      icon: <GraduationCap size={18} className="text-amber-700" />,
     },
   ]
 
   return (
-    <div style={{ fontFamily: font, maxWidth: 1040, margin: "0 auto", display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ backgroundColor: "#fff", borderRadius: 18, padding: "22px 24px", border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <GraduationCap size={20} color="#fff" />
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+      <div className="rounded-[28px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200/30">
+              <GraduationCap size={24} />
             </div>
             <div>
-              <h1 style={{ fontSize: 18, fontWeight: 800, color: "#111827", margin: 0 }}>Student dashboard</h1>
-              <p style={{ fontSize: 12, color: "#9ca3af", margin: "4px 0 0" }}>
-                {student.institution} · Welcome, <strong>{student.name}</strong>
-              </p>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">Student dashboard</p>
+              <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Welcome back, {student.name}</h1>
+              <p className="mt-2 text-sm text-slate-500">{student.institution} · {student.programName} · Semester {student.semester ?? "—"}</p>
             </div>
           </div>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <Link href="/dashboard/student/todo" style={{ textDecoration: "none", fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", border: "1px solid #c7d2fe", borderRadius: 999, padding: "8px 14px" }}>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/dashboard/student/todo" className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100">
               📋 To-Do List
             </Link>
-            <Link href="/dashboard/student/report-card" style={{ textDecoration: "none", fontSize: 12, fontWeight: 700, color: "#0d9488", background: "#f0fdfa", border: "1px solid #99f6e4", borderRadius: 999, padding: "8px 14px" }}>
+            <Link href="/dashboard/student/report-card" className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
               🏆 Report Card
             </Link>
-            <div style={{ border: "1px solid #ece7ff", background: "#f5f3ff", borderRadius: 999, padding: "8px 12px", color: "#6d28d9", fontSize: 12, fontWeight: 700 }}>
-              {student.programName} · Semester {student.semester ?? "—"}
-            </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 12 }}>
+      <div className="grid gap-4 xl:grid-cols-4">
         {stats.map((item) => (
-          <div key={item.label} style={{ backgroundColor: "#fff", borderRadius: 14, padding: "16px 18px", border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.04)", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 40, height: 40, borderRadius: 10, backgroundColor: item.accent, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <div key={item.label} className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm transition hover:-translate-y-0.5">
+            <div className={`inline-flex h-12 w-12 items-center justify-center rounded-3xl ${item.accent}`}>
               {item.icon}
             </div>
-            <div>
-              <p style={{ fontSize: 20, fontWeight: 800, color: item.text, lineHeight: 1, margin: 0 }}>{item.value}</p>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>{item.label}</p>
-              <p style={{ fontSize: 10, color: "#6b7280", margin: "2px 0 0" }}>{item.sublabel}</p>
-            </div>
+            <p className="mt-4 text-2xl font-bold text-slate-950">{item.value}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">{item.label}</p>
+            <p className="mt-2 text-sm text-slate-500">{item.sublabel}</p>
           </div>
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: 16 }}>
-        <div style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+          <div className="flex items-center justify-between gap-4 pb-4">
             <div>
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: 0 }}>Today’s classes</h2>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>Based on the latest timetable entries for your section</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Today’s classes</p>
+              <h2 className="mt-3 text-xl font-semibold text-slate-950">Your schedule</h2>
             </div>
-            <div style={{ color: "#4f46e5", fontSize: 11, fontWeight: 700 }}>Live</div>
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Live</span>
           </div>
-
-          {schedule.length === 0 ? (
-            <div style={{ border: "1.5px dashed #e5e7eb", borderRadius: 12, textAlign: "center", padding: "28px 16px", color: "#9ca3af" }}>
-              No class sessions are scheduled for today yet.
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              {schedule.map((item) => (
-                <div key={`${item.day}-${item.period}`} style={{ border: "1px solid #f3f4f6", borderRadius: 12, padding: 12, display: "flex", gap: 10, alignItems: "center", backgroundColor: "#fafafa" }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "linear-gradient(135deg, #e0e7ff, #bfdbfe)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#4f46e5", flexShrink: 0 }}>
-                    P{item.period}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
-                      <h3 style={{ fontSize: 13, fontWeight: 700, color: "#111827", margin: 0 }}>{item.subjectCode} · {item.subjectName}</h3>
-                      <span style={{ fontSize: 10, color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: 4 }}><Clock size={11} />{item.period}</span>
+          <div className="space-y-4">
+            {schedule.length === 0 ? (
+              <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">No class sessions are scheduled for today yet.</div>
+            ) : (
+              schedule.map((item) => (
+                <div key={`${item.day}-${item.period}`} className="rounded-3xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">{item.subjectCode} · {item.subjectName}</p>
+                      <p className="mt-2 text-sm text-slate-500">Faculty: {item.facultyName}</p>
                     </div>
-                    <p style={{ fontSize: 11, color: "#6b7280", margin: "4px 0 0" }}>Faculty: <strong>{item.facultyName}</strong></p>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+                      <Clock size={14} /> Period {item.period}
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-          <div style={{ marginBottom: 12 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: 0 }}>My enrolled courses</h2>
-            <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>Subjects tied to your section and program</p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 360, overflowY: "auto", paddingRight: 4 }}>
-            {subjects.length === 0 ? (
-              <div style={{ border: "1.5px dashed #e5e7eb", borderRadius: 12, textAlign: "center", padding: "30px 12px", color: "#9ca3af" }}>
-                No subjects are linked to your section yet.
-              </div>
-            ) : (
-              subjects.map((subject) => (
-                <Link
-                  key={subject.id}
-                  href={`/dashboard/student/subjects/${subject.id}`}
-                  style={{ textDecoration: "none", display: "block" }}
-                >
-                  <div style={{ border: "1px solid #f3f4f6", borderRadius: 12, padding: "10px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fff", transition: "transform 0.2s" }} className="hover:scale-[1.01]">
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <div style={{ width: 32, height: 32, borderRadius: 8, backgroundColor: "#ede9fe", display: "flex", alignItems: "center", justifyContent: "center" }}>📘</div>
-                      <div>
-                        <p style={{ fontSize: 12, fontWeight: 700, color: "#111827", margin: 0 }}>{subject.name}</p>
-                        <p style={{ fontSize: 10, color: "#9ca3af", margin: "2px 0 0" }}>{subject.code} · {subject.facultyName}</p>
-                      </div>
-                    </div>
-                    <ChevronRight size={13} color="#d1d5db" />
-                  </div>
-                </Link>
               ))
             )}
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-        <div style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <div>
-              <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: 0 }}>Attendance summary</h2>
-              <p style={{ fontSize: 11, color: "#9ca3af", margin: "4px 0 0" }}>Based on the sessions recorded for your section</p>
-            </div>
-            <div style={{ color: "#16a34a", fontSize: 11, fontWeight: 700 }}>Updated live</div>
+        <aside className="space-y-6 rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Attendance</p>
+            <h2 className="mt-3 text-xl font-semibold text-slate-950">Session summary</h2>
           </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 10 }}>
-            <div style={{ backgroundColor: "#f0fdf4", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#166534", fontSize: 12, fontWeight: 700 }}><CheckCircle2 size={13} /> Present</div>
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#166534", margin: "6px 0 0" }}>{attendance.present}</p>
+          <div className="grid gap-3">
+            <div className="rounded-3xl bg-emerald-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Present</p>
+              <p className="mt-3 text-3xl font-bold text-emerald-900">{attendance.present}</p>
             </div>
-            <div style={{ backgroundColor: "#fef2f2", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#991b1b", fontSize: 12, fontWeight: 700 }}><AlertCircle size={13} /> Absent</div>
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#991b1b", margin: "6px 0 0" }}>{attendance.absent}</p>
+            <div className="rounded-3xl bg-rose-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Absent</p>
+              <p className="mt-3 text-3xl font-bold text-rose-900">{attendance.absent}</p>
             </div>
-            <div style={{ backgroundColor: "#eff6ff", borderRadius: 12, padding: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#1d4ed8", fontSize: 12, fontWeight: 700 }}><Clock size={13} /> Late</div>
-              <p style={{ fontSize: 20, fontWeight: 800, color: "#1d4ed8", margin: "6px 0 0" }}>{attendance.late}</p>
+            <div className="rounded-3xl bg-sky-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Late</p>
+              <p className="mt-3 text-3xl font-bold text-sky-900">{attendance.late}</p>
             </div>
           </div>
-        </div>
-
-        <div style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
-          <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827", margin: 0 }}>Student details</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-            {[
-              ["Email", student.email || "—"],
-              ["Registration", student.registrationNumber || "—"],
-              ["Phone", student.phone || "—"],
-              ["Admission year", student.admissionYear ?? "—"],
-            ].map(([label, value]) => (
-              <div key={label} style={{ backgroundColor: "#fafafa", borderRadius: 12, padding: 10 }}>
-                <p style={{ fontSize: 10, color: "#9ca3af", margin: 0, textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</p>
-                <p style={{ fontSize: 12, color: "#111827", margin: "4px 0 0", fontWeight: 600 }}>{value}</p>
-              </div>
-            ))}
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+            <p className="text-sm font-semibold text-slate-900">Student details</p>
+            <div className="mt-4 grid gap-3">
+              {[
+                ["Email", student.email],
+                ["Registration", student.registrationNumber],
+                ["Phone", student.phone],
+                ["Admission year", student.admissionYear ?? "—"],
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-3xl bg-white p-4">
+                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
+                  <p className="mt-2 text-sm font-semibold text-slate-900">{value || "—"}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        </aside>
       </div>
     </div>
   )

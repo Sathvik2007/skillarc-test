@@ -4,6 +4,9 @@ import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Bell, Search, LogOut, User, Settings, ChevronDown } from "lucide-react"
 import { supabase } from "@/lib/supabase"
+import { ROLES } from "@/constants/roles"
+
+type Role = typeof ROLES[keyof typeof ROLES]
 
 export default function Navbar() {
   const router = useRouter()
@@ -14,6 +17,31 @@ export default function Navbar() {
   const notifRef = useRef<HTMLDivElement>(null)
   const [profile, setProfile] = useState<{ name: string; role: string } | null>(null)
 
+  const profileRoutes: Record<Role, string> = {
+    [ROLES.SUPER_ADMIN]: "/dashboard/super-admin",
+    [ROLES.ORG_ADMIN]: "/dashboard/org-admin",
+    [ROLES.INSTITUTION_ADMIN]: "/dashboard/institution-admin",
+    [ROLES.HOD]: "/dashboard/hod",
+    [ROLES.PROGRAM_HEAD]: "/dashboard/program-head",
+    [ROLES.FACULTY]: "/dashboard/faculty/profile",
+    [ROLES.STUDENT]: "/dashboard/student",
+    [ROLES.PARENT]: "/dashboard/parent",
+  }
+
+  const settingsRoutes: Record<Role, string> = {
+    [ROLES.SUPER_ADMIN]: "/dashboard/super-admin/settings",
+    [ROLES.ORG_ADMIN]: "/dashboard/org-admin",
+    [ROLES.INSTITUTION_ADMIN]: "/dashboard/institution-admin",
+    [ROLES.HOD]: "/dashboard/hod",
+    [ROLES.PROGRAM_HEAD]: "/dashboard/program-head",
+    [ROLES.FACULTY]: "/dashboard/faculty/profile",
+    [ROLES.STUDENT]: "/dashboard/student",
+    [ROLES.PARENT]: "/dashboard/parent",
+  }
+
+  const profilePath = profile ? profileRoutes[profile.role as Role] ?? "/dashboard" : "/dashboard"
+  const settingsPath = profile ? settingsRoutes[profile.role as Role] ?? profilePath : "/dashboard"
+
   useEffect(() => {
     async function getProfile() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -23,6 +51,7 @@ export default function Navbar() {
           .select("name, role")
           .eq("id", user.id)
           .single()
+
         if (data) {
           setProfile({
             name: data.name ?? user.email?.split("@")[0] ?? "User",
@@ -36,19 +65,20 @@ export default function Navbar() {
         }
       }
     }
+
     getProfile()
   }, [])
 
-  // Close dropdowns on outside click
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+    function handleClick(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false)
       }
-      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
         setNotifOpen(false)
       }
     }
+
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
   }, [])
@@ -57,7 +87,6 @@ export default function Navbar() {
     setDropdownOpen(false)
     await supabase.auth.signOut()
     router.push("/auth/login")
-    router.refresh()
   }
 
   const notifications = [
@@ -67,235 +96,130 @@ export default function Navbar() {
   ]
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=Syne:wght@700&display=swap');
-
-        .navbar-search {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          background: #f9fafb;
-          border: 1px solid #ede9fe;
-          border-radius: 10px;
-          padding: 7px 14px;
-          transition: all 0.18s;
-        }
-        .navbar-search:focus-within {
-          border-color: #a78bfa;
-          background: #fff;
-          box-shadow: 0 0 0 3px rgba(167,139,250,0.12);
-        }
-        .navbar-search input {
-          border: none; outline: none; background: transparent;
-          font-family: 'DM Sans', sans-serif;
-          font-size: 13px; color: #374151; width: 200px;
-        }
-        .navbar-search input::placeholder { color: #c4b5fd; }
-
-        .icon-btn {
-          position: relative;
-          width: 38px; height: 38px;
-          background: #fff;
-          border: 1px solid #ede9fe;
-          border-radius: 10px;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-          transition: all 0.15s;
-          flex-shrink: 0;
-        }
-        .icon-btn:hover { background: #f0efff; border-color: #c4b5fd; }
-        .icon-btn.active { background: #f0efff; border-color: #a78bfa; }
-
-        .pulse-dot {
-          width: 7px; height: 7px;
-          background: #ec4899;
-          border-radius: 50%;
-          position: absolute; top: 7px; right: 7px;
-          border: 1.5px solid #fff;
-          animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(0.75); }
-        }
-
-        .dropdown {
-          position: absolute;
-          top: calc(100% + 8px);
-          right: 0;
-          background: #fff;
-          border: 1px solid #ede9fe;
-          border-radius: 14px;
-          box-shadow: 0 8px 32px rgba(79,70,229,0.12);
-          z-index: 100;
-          overflow: hidden;
-          animation: dropIn 0.15s ease;
-        }
-        @keyframes dropIn {
-          from { opacity: 0; transform: translateY(-6px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-
-        .dropdown-item {
-          display: flex; align-items: center; gap: 10px;
-          padding: 10px 16px;
-          font-size: 13px; font-weight: 500;
-          color: #374151;
-          font-family: 'DM Sans', sans-serif;
-          cursor: pointer;
-          transition: background 0.12s;
-          white-space: nowrap;
-          border: none; background: transparent; width: 100%; text-align: left;
-        }
-        .dropdown-item:hover { background: #f5f3ff; color: #4f46e5; }
-        .dropdown-item.danger:hover { background: #fff1f2; color: #ef4444; }
-
-        .avatar-btn {
-          display: flex; align-items: center; gap: 8px;
-          padding: 5px 10px 5px 5px;
-          background: #fff;
-          border: 1px solid #ede9fe;
-          border-radius: 12px;
-          cursor: pointer;
-          transition: all 0.15s;
-          font-family: 'DM Sans', sans-serif;
-        }
-        .avatar-btn:hover { background: #f5f3ff; border-color: #c4b5fd; }
-        .avatar-btn.open { background: #f5f3ff; border-color: #a78bfa; }
-      `}</style>
-
-      <header style={{
-        height: 64,
-        background: "#fff",
-        borderBottom: "1px solid #ede9fe",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 28px",
-        position: "sticky",
-        top: 0, zIndex: 10,
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
-
-        {/* Left — page title */}
+    <header className="sticky top-0 z-20 border-b border-slate-200/70 bg-white/85 backdrop-blur-xl shadow-sm">
+      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <div>
-          <h1 style={{
-            fontFamily: "'Syne', sans-serif",
-            fontWeight: 700, fontSize: 17,
-            color: "#1e1b4b", letterSpacing: "-0.3px", lineHeight: 1.2,
-          }}>
-            Dashboard
-          </h1>
-          <p style={{ fontSize: 11, color: "#a78bfa", marginTop: 1 }}>
-            {new Date().toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+          <h1 className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-900">Dashboard</h1>
+          <p className="mt-1 text-xs text-indigo-600">
+            {new Date().toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
 
-        {/* Right controls */}
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-
-          {/* Search */}
-          <div className="navbar-search">
-            <Search size={13} color="#c4b5fd" />
+        <div className="flex flex-1 items-center justify-end gap-3">
+          <div className="flex min-w-[280px] items-center gap-3 rounded-[18px] border border-indigo-100 bg-white/90 px-4 py-2 shadow-[0_16px_40px_rgba(99,102,241,0.06)] transition focus-within:border-indigo-300 focus-within:bg-white">
+            <Search size={14} className="text-indigo-300" />
             <input
+              type="search"
               value={query}
-              onChange={e => setQuery(e.target.value)}
+              onChange={(e) => setQuery(e.target.value)}
               placeholder="Search anything…"
+              className="min-w-0 bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
             />
           </div>
 
-          {/* Notifications */}
-          <div style={{ position: "relative" }} ref={notifRef}>
-            <div
-              className={`icon-btn${notifOpen ? " active" : ""}`}
-              onClick={() => { setNotifOpen(p => !p); setDropdownOpen(false) }}
+          <div className="relative" ref={notifRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setNotifOpen((open) => !open)
+                setDropdownOpen(false)
+              }}
+              className={`relative inline-flex h-11 w-11 items-center justify-center rounded-[14px] border border-indigo-100 bg-white/90 text-slate-600 transition hover:bg-slate-50 ${notifOpen ? "ring-1 ring-indigo-200" : ""}`}
             >
-              <Bell size={15} color="#6b7280" />
-              <span className="pulse-dot" />
-            </div>
+              <Bell size={16} />
+              <span className="absolute right-2 top-2 inline-flex h-2.5 w-2.5 rounded-full bg-orange-400/90 shadow-[0_0_0_4px_rgba(248,113,113,0.14)] animate-ping" />
+              <span className="absolute right-2 top-2 h-2.5 w-2.5 rounded-full bg-orange-400" />
+            </button>
 
             {notifOpen && (
-              <div className="dropdown" style={{ width: 300 }}>
-                <div style={{ padding: "12px 16px 8px", borderBottom: "1px solid #f3f0ff" }}>
-                  <p style={{ fontSize: 12, fontWeight: 700, color: "#1e1b4b" }}>Notifications</p>
+              <div className="absolute right-0 top-full z-30 mt-3 min-w-[300px] overflow-hidden rounded-[20px] border border-slate-200 bg-white/95 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+                <div className="border-b border-slate-200/70 px-4 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-900">Notifications</p>
                 </div>
-                {notifications.map(n => (
-                  <div key={n.id} style={{
-                    padding: "10px 16px",
-                    display: "flex", gap: 10, alignItems: "flex-start",
-                    borderBottom: "1px solid #faf5ff",
-                    background: n.unread ? "#fdfbff" : "#fff",
-                    cursor: "pointer",
-                    transition: "background 0.12s",
-                  }}
-                    onMouseEnter={e => (e.currentTarget.style.background = "#f5f3ff")}
-                    onMouseLeave={e => (e.currentTarget.style.background = n.unread ? "#fdfbff" : "#fff")}
-                  >
-                    {n.unread && (
-                      <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#a78bfa", flexShrink: 0, marginTop: 4 }} />
-                    )}
-                    <div style={{ flex: 1, paddingLeft: n.unread ? 0 : 13 }}>
-                      <p style={{ fontSize: 12, color: "#374151", lineHeight: 1.45 }}>{n.text}</p>
-                      <p style={{ fontSize: 11, color: "#a78bfa", marginTop: 2 }}>{n.time}</p>
-                    </div>
-                  </div>
-                ))}
-                <div style={{ padding: "8px 16px", textAlign: "center" }}>
-                  <p style={{ fontSize: 11, color: "#a78bfa", cursor: "pointer", fontWeight: 600 }}>
+                <div className="flex flex-col">
+                  {notifications.map((notification) => (
+                    <button
+                      key={notification.id}
+                      type="button"
+                      className={`flex w-full items-start gap-3 px-4 py-3 text-left text-sm transition ${notification.unread ? "bg-slate-50" : "hover:bg-slate-100"}`}
+                    >
+                      {notification.unread && <span className="mt-1 inline-flex h-2.5 w-2.5 rounded-full bg-indigo-500" />}
+                      <div className="min-w-0">
+                        <p className="text-sm text-slate-700">{notification.text}</p>
+                        <p className="mt-1 text-xs text-slate-400">{notification.time}</p>
+                      </div>
+                    </button>
+                  ))}
+                  <button type="button" className="w-full border-t border-slate-200/70 px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.24em] text-indigo-600 transition hover:bg-indigo-50">
                     View all notifications
-                  </p>
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Avatar + dropdown */}
-          <div style={{ position: "relative" }} ref={dropdownRef}>
-            <div
-              className={`avatar-btn${dropdownOpen ? " open" : ""}`}
-              onClick={() => { setDropdownOpen(p => !p); setNotifOpen(false) }}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setDropdownOpen((open) => !open)
+                setNotifOpen(false)
+              }}
+              className={`inline-flex items-center gap-3 rounded-[16px] border border-indigo-100 bg-white/90 px-3 py-2 transition hover:bg-slate-50 ${dropdownOpen ? "ring-1 ring-indigo-200" : ""}`}
             >
-              <div style={{
-                width: 30, height: 30,
-                background: "linear-gradient(135deg, #4f46e5, #a78bfa)",
-                borderRadius: 8,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                color: "#fff", fontSize: 11, fontWeight: 700,
-              }}>
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white">
                 {profile ? profile.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase() : "U"}
               </div>
-              <div>
-                <p style={{ fontSize: 12, fontWeight: 600, color: "#1e1b4b", lineHeight: 1.2 }}>{profile ? profile.name : "Loading..."}</p>
-                <p style={{ fontSize: 10, color: "#a78bfa", textTransform: "capitalize" }}>{profile ? profile.role.replace(/_/g, " ") : "Loading..."}</p>
+              <div className="min-w-0 text-left">
+                <p className="truncate text-sm font-semibold text-slate-900">{profile ? profile.name : "Loading..."}</p>
+                <p className="text-xs text-indigo-600">{profile ? profile.role.replace(/_/g, " ") : "Loading..."}</p>
               </div>
-              <ChevronDown
-                size={13} color="#9ca3af"
-                style={{ transition: "transform 0.15s", transform: dropdownOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-              />
-            </div>
+              <ChevronDown className={`h-4 w-4 text-slate-500 transition-transform duration-150 ${dropdownOpen ? "rotate-180" : "rotate-0"}`} />
+            </button>
 
             {dropdownOpen && (
-              <div className="dropdown" style={{ width: 180 }}>
-                <button className="dropdown-item" onClick={() => { router.push("/dashboard/settings"); setDropdownOpen(false) }}>
-                  <User size={14} color="#a78bfa" />
+              <div className="absolute right-0 top-full z-30 mt-3 min-w-[220px] overflow-hidden rounded-[20px] border border-slate-200 bg-white/95 shadow-[0_28px_70px_rgba(15,23,42,0.12)] backdrop-blur-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    router.push(profilePath)
+                    setDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-indigo-50"
+                >
+                  <User size={14} className="text-indigo-500" />
                   My Profile
                 </button>
-                <button className="dropdown-item" onClick={() => { router.push("/dashboard/settings"); setDropdownOpen(false) }}>
-                  <Settings size={14} color="#a78bfa" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    router.push(settingsPath)
+                    setDropdownOpen(false)
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-indigo-50"
+                >
+                  <Settings size={14} className="text-indigo-500" />
                   Settings
                 </button>
-                <div style={{ height: 1, background: "#f3f0ff", margin: "4px 0" }} />
-                <button className="dropdown-item danger" onClick={handleLogout}>
-                  <LogOut size={14} color="#f87171" />
+                <div className="border-t border-slate-200/70" />
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-3 text-sm font-semibold text-rose-600 transition hover:bg-rose-50"
+                >
+                  <LogOut size={14} className="text-rose-500" />
                   Log out
                 </button>
               </div>
             )}
           </div>
-
         </div>
-      </header>
-    </>
+      </div>
+    </header>
   )
 }

@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation"
 import { Pencil, Trash2, X, Check, Plus, Building2 } from "lucide-react"
 import { createInstitution, deleteInstitution, updateInstitution } from "@/modules/org-admin/create-institution"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
+const STATUS_STYLES: Record<string, string> = {
+  idle: "bg-slate-50 text-slate-600",
+  loading: "bg-slate-100 text-slate-600",
+  success: "bg-emerald-50 text-emerald-700",
+  error: "bg-rose-50 text-rose-700",
+}
+
 type Status = "idle" | "loading" | "success" | "error"
 
 interface Institution { id: string; name: string; domain: string | null }
@@ -30,7 +36,6 @@ export default function OrgAdminDashboardClient({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editName, setEditName] = useState("")
   const [editDomain, setEditDomain] = useState("")
-  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const isValid = name.trim().length > 0 && adminEmail.trim().length > 0
 
@@ -54,7 +59,7 @@ export default function OrgAdminDashboardClient({
   async function handleDelete(id: string) {
     try {
       await deleteInstitution(id)
-      setDeletingId(null)
+      setEditingId(null)
       startTransition(() => router.refresh())
     } catch (err: any) {
       alert(err?.message)
@@ -78,295 +83,178 @@ export default function OrgAdminDashboardClient({
   }
 
   const statCards = [
-    { label: "Institutions", value: stats.institutions, accent: "#dbeafe", text: "#1d4ed8", icon: "🏛️" },
-    { label: "Faculty",      value: stats.faculty,      accent: "#d1fae5", text: "#065f46", icon: "👨‍🏫" },
-    { label: "Students",     value: stats.students,     accent: "#fef3c7", text: "#b45309", icon: "🎓" },
+    { label: "Institutions", value: stats.institutions, accent: "bg-sky-100 text-sky-700", icon: "🏛️" },
+    { label: "Faculty", value: stats.faculty, accent: "bg-emerald-100 text-emerald-700", icon: "👨‍🏫" },
+    { label: "Students", value: stats.students, accent: "bg-violet-100 text-violet-700", icon: "🎓" },
   ]
 
   return (
-    <div style={{ fontFamily: font, maxWidth: 960, margin: "0 auto" }}>
-
-      <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em", marginBottom: 4 }}>
-          Organization Dashboard
-        </h1>
-        <p style={{ fontSize: 12, color: "#9ca3af" }}>Manage your institutions and organization settings</p>
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
-        {statCards.map(s => (
-          <div key={s.label} style={{
-            backgroundColor: "#ffffff", borderRadius: 14, padding: "18px 20px",
-            border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-            display: "flex", alignItems: "center", gap: 14,
-          }}>
-            <div style={{
-              width: 42, height: 42, borderRadius: 11, backgroundColor: s.accent,
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0,
-            }}>
-              {s.icon}
-            </div>
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+      <div className="space-y-6">
+        <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <p style={{ fontSize: 22, fontWeight: 800, color: s.text, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{s.label}</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Organization dashboard</p>
+              <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Manage institutions with ease</h1>
+              <p className="mt-2 text-sm text-slate-500">Track organization growth, faculty oversight, and student expansion in one place.</p>
             </div>
+            <button
+              onClick={() => router.push("/dashboard/org-admin")}
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200/30 transition hover:bg-indigo-700"
+            >
+              <Plus size={16} /> Add institution
+            </button>
           </div>
-        ))}
-      </div>
-
-      <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 16, alignItems: "start" }}>
-
-        <div style={{
-          backgroundColor: "#ffffff", borderRadius: 16, padding: 24,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "1px solid #f3f4f6",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10,
-              background: "linear-gradient(135deg, #1e3a5f, #1d4ed8)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Plus size={17} color="#fff" />
-            </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>New Institution</p>
-              <p style={{ fontSize: 11, color: "#9ca3af" }}>Add to your organization</p>
-            </div>
-          </div>
-
-          {createStatus === "success" && (
-            <div style={{
-              backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span>🎉</span>
-              <p style={{ fontSize: 12, color: "#166534", margin: 0, fontWeight: 500 }}>Institution created & admin invited!</p>
-            </div>
-          )}
-
-          {createStatus === "error" && (
-            <div style={{
-              backgroundColor: "#fee2e2", border: "1px solid #fecaca",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 16,
-            }}>
-              <p style={{ fontSize: 12, color: "#991b1b", margin: 0 }}>{errorMsg}</p>
-            </div>
-          )}
-
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-            Institution Name <span style={{ color: "#ef4444" }}>*</span>
-          </label>
-          <input
-            placeholder="e.g. RVCE, MIT Manipal"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleCreate()}
-            style={{
-              width: "100%", padding: "9px 12px", fontSize: 13,
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              backgroundColor: "#f9fafb", color: "#111827",
-              outline: "none", marginBottom: 12, boxSizing: "border-box", fontFamily: font,
-            }}
-          />
-
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-            Domain <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
-          </label>
-          <input
-            placeholder="e.g. rvce.edu.in"
-            value={domain}
-            onChange={e => setDomain(e.target.value)}
-            style={{
-              width: "100%", padding: "9px 12px", fontSize: 13,
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              backgroundColor: "#f9fafb", color: "#111827",
-              outline: "none", marginBottom: 12, boxSizing: "border-box", fontFamily: font,
-            }}
-          />
-
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-            Admin Email <span style={{ color: "#ef4444" }}>*</span>
-          </label>
-          <input
-            placeholder="admin@college.edu"
-            value={adminEmail}
-            type="email"
-            onChange={e => setAdminEmail(e.target.value)}
-            style={{
-              width: "100%", padding: "9px 12px", fontSize: 13,
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              backgroundColor: "#f9fafb", color: "#111827",
-              outline: "none", marginBottom: 16, boxSizing: "border-box", fontFamily: font,
-            }}
-          />
-
-          <button
-            onClick={handleCreate}
-            disabled={!isValid || createStatus === "loading"}
-            style={{
-              width: "100%", padding: "10px 0", fontSize: 13, fontWeight: 700,
-              color: "#ffffff",
-              backgroundColor: !isValid ? "#e5e7eb" : createStatus === "loading" ? "#93c5fd" : "#1d4ed8",
-              border: "none", borderRadius: 10,
-              cursor: !isValid || createStatus === "loading" ? "not-allowed" : "pointer",
-              transition: "background 0.15s", fontFamily: font,
-            }}
-          >
-            {createStatus === "loading" ? "Creating…" : "Create Institution"}
-          </button>
         </div>
 
-        <div style={{
-          backgroundColor: "#ffffff", borderRadius: 16, padding: 24,
-          boxShadow: "0 1px 4px rgba(0,0,0,0.06)", border: "1px solid #f3f4f6",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-            <div style={{
-              width: 36, height: 36, borderRadius: 10, backgroundColor: "#ede9fe",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <Building2 size={17} color="#6d28d9" />
+        <div className="grid gap-4 md:grid-cols-3">
+          {statCards.map((card) => (
+            <div key={card.label} className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">
+              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-3xl ${card.accent}`}>
+                <span className="text-lg">{card.icon}</span>
+              </div>
+              <p className="mt-4 text-2xl font-bold text-slate-950">{card.value}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-700">{card.label}</p>
             </div>
-            <div>
-              <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Institutions</p>
-              <p style={{ fontSize: 11, color: "#9ca3af" }}>{initialInstitutions.length} total</p>
+          ))}
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+          <aside className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center gap-4 pb-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-indigo-100 text-indigo-700">
+                <Plus size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-900">New institution</p>
+                <p className="text-sm text-slate-500">Launch an institution and invite an admin.</p>
+              </div>
             </div>
-          </div>
 
-          {initialInstitutions.length === 0 ? (
-            <div style={{
-              textAlign: "center", padding: "32px 0",
-              border: "1.5px dashed #e5e7eb", borderRadius: 12,
-            }}>
-              <p style={{ fontSize: 13, color: "#9ca3af" }}>No institutions yet</p>
-              <p style={{ fontSize: 11, color: "#d1d5db", marginTop: 4 }}>Create one to get started</p>
+            {createStatus !== "idle" && (
+              <div className={`mb-5 rounded-3xl p-4 ${STATUS_STYLES[createStatus]}`}>
+                {createStatus === "success" && "Institution created & admin invited!"}
+                {createStatus === "error" && errorMsg}
+                {createStatus === "loading" && "Creating institution..."}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Institution name</label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+                  placeholder="e.g. RVCE, MIT Manipal"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Domain (optional)</label>
+                <input
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value)}
+                  placeholder="e.g. rvce.edu.in"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Admin email</label>
+                <input
+                  value={adminEmail}
+                  type="email"
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  placeholder="admin@college.edu"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                />
+              </div>
+              <button
+                onClick={handleCreate}
+                disabled={!isValid || createStatus === "loading"}
+                className="mt-2 w-full rounded-3xl px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 bg-indigo-600 hover:bg-indigo-700"
+              >
+                {createStatus === "loading" ? "Creating institution..." : "Create Institution"}
+              </button>
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {initialInstitutions.map(inst => (
-                <div key={inst.id} style={{
-                  border: "1px solid #f3f4f6", borderRadius: 12, padding: "12px 14px",
-                  display: "flex", alignItems: "center", gap: 12,
-                  backgroundColor: editingId === inst.id ? "#fafafa" : "#fff",
-                  transition: "background 0.15s",
-                }}>
-                  <div style={{
-                    width: 32, height: 32, borderRadius: 8, backgroundColor: "#dbeafe",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 14, flexShrink: 0,
-                  }}>
-                    🏛️
-                  </div>
+          </aside>
 
-                  {editingId === inst.id ? (
-                    <div style={{ flex: 1, display: "flex", gap: 8, alignItems: "center" }}>
-                      <input
-                        value={editName}
-                        onChange={e => setEditName(e.target.value)}
-                        style={{
-                          flex: 1, padding: "6px 10px", fontSize: 12,
-                          border: "1px solid #c7d2fe", borderRadius: 8,
-                          outline: "none", fontFamily: font, color: "#111827",
-                        }}
-                      />
-                      <input
-                        value={editDomain}
-                        onChange={e => setEditDomain(e.target.value)}
-                        placeholder="domain (optional)"
-                        style={{
-                          width: 130, padding: "6px 10px", fontSize: 12,
-                          border: "1px solid #e5e7eb", borderRadius: 8,
-                          outline: "none", fontFamily: font, color: "#6b7280",
-                        }}
-                      />
-                      <button
-                        onClick={() => handleEdit(inst.id)}
-                        style={{
-                          width: 28, height: 28, borderRadius: 7, border: "none",
-                          backgroundColor: "#1d4ed8", cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
-                      >
-                        <Check size={13} color="#fff" />
-                      </button>
-                      <button
-                        onClick={() => setEditingId(null)}
-                        style={{
-                          width: 28, height: 28, borderRadius: 7, border: "1px solid #e5e7eb",
-                          backgroundColor: "#fff", cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
-                      >
-                        <X size={13} color="#9ca3af" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {inst.name}
-                      </p>
-                      <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>
-                        {inst.domain ?? "No domain set"}
-                      </p>
-                    </div>
-                  )}
-
-                  {editingId !== inst.id && (
-                    <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
-                      <button
-                        onClick={() => startEdit(inst)}
-                        style={{
-                          width: 28, height: 28, borderRadius: 7, border: "1px solid #e5e7eb",
-                          backgroundColor: "#fff", cursor: "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                        }}
-                        onMouseEnter={e => { (e.currentTarget.style.backgroundColor = "#f0f9ff"); (e.currentTarget.style.borderColor = "#bae6fd") }}
-                        onMouseLeave={e => { (e.currentTarget.style.backgroundColor = "#fff"); (e.currentTarget.style.borderColor = "#e5e7eb") }}
-                      >
-                        <Pencil size={12} color="#6b7280" />
-                      </button>
-
-                      {deletingId === inst.id ? (
-                        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-                          <span style={{ fontSize: 11, color: "#ef4444", fontWeight: 600 }}>Sure?</span>
-                          <button
-                            onClick={() => handleDelete(inst.id)}
-                            style={{
-                              padding: "4px 8px", borderRadius: 6, border: "none",
-                              backgroundColor: "#ef4444", color: "#fff",
-                              fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: font,
-                            }}
-                          >Yes</button>
-                          <button
-                            onClick={() => setDeletingId(null)}
-                            style={{
-                              padding: "4px 8px", borderRadius: 6, border: "1px solid #e5e7eb",
-                              backgroundColor: "#fff", fontSize: 11, fontWeight: 600,
-                              cursor: "pointer", fontFamily: font, color: "#6b7280",
-                            }}
-                          >No</button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => setDeletingId(inst.id)}
-                          style={{
-                            width: 28, height: 28, borderRadius: 7, border: "1px solid #e5e7eb",
-                            backgroundColor: "#fff", cursor: "pointer",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                          }}
-                          onMouseEnter={e => { (e.currentTarget.style.backgroundColor = "#fff1f2"); (e.currentTarget.style.borderColor = "#fecaca") }}
-                          onMouseLeave={e => { (e.currentTarget.style.backgroundColor = "#fff"); (e.currentTarget.style.borderColor = "#e5e7eb") }}
-                        >
-                          <Trash2 size={12} color="#ef4444" />
-                        </button>
-                      )}
-                    </div>
-                  )}
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Institution roster</p>
+                <h2 className="mt-3 text-xl font-semibold text-slate-950">Active institutions</h2>
+              </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">
+                {initialInstitutions.length} total
+              </span>
+            </div>
+            <div className="space-y-4">
+              {initialInstitutions.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+                  No institutions yet.
                 </div>
-              ))}
+              ) : (
+                initialInstitutions.map((inst) => (
+                  <div key={inst.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-950 truncate">{inst.name}</p>
+                        <p className="mt-1 text-sm text-slate-500 truncate">{inst.domain ?? "No domain set"}</p>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {editingId === inst.id ? (
+                          <>
+                            <button
+                              onClick={() => handleEdit(inst.id)}
+                              className="inline-flex h-10 items-center justify-center rounded-2xl bg-emerald-600 px-4 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                            >
+                              <Check size={16} />
+                            </button>
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                              <X size={16} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => startEdit(inst)}
+                              className="inline-flex h-10 items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+                            >
+                              <Pencil size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(inst.id)}
+                              className="inline-flex h-10 items-center justify-center rounded-2xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    {editingId === inst.id && (
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                        <input
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                        />
+                        <input
+                          value={editDomain}
+                          onChange={(e) => setEditDomain(e.target.value)}
+                          className="w-full rounded-3xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
-          )}
+          </section>
         </div>
       </div>
     </div>

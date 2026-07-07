@@ -3,6 +3,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
 import { ROLES } from "@/constants/roles"
+import { clearInstitutionName } from "@/app/dashboard/faculty/components/faculty-cache-v2"
 
 export async function createInstitution(data: {
   name: string
@@ -57,6 +58,12 @@ export async function deleteInstitution(id: string) {
     .delete()
     .eq("id", id)
   if (error) throw error
+  try {
+    if (process.env.CACHE_DEBUG === "1") console.debug("[org-admin] clearing institution cache", id)
+    clearInstitutionName(id)
+  } catch (e) {
+    console.warn('failed to clear institution cache', e)
+  }
   revalidatePath("/dashboard/org-admin")
 }
 
@@ -67,5 +74,11 @@ export async function updateInstitution(id: string, data: { name: string; domain
     .update({ name: data.name, domain: data.domain || null })
     .eq("id", id)
   if (error) throw error
+  try {
+    if (process.env.CACHE_DEBUG === "1") console.debug("[org-admin] clearing institution cache", id)
+    clearInstitutionName(id)
+  } catch (e) {
+    console.warn('failed to clear institution cache', e)
+  }
   revalidatePath("/dashboard/org-admin")
 }

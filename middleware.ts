@@ -27,13 +27,6 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 🔍 DEBUG — remove after fixing
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-  console.log("PATH   :", request.nextUrl.pathname)
-  console.log("USER   :", user?.email ?? "null")
-  console.log("COOKIES:", request.cookies.getAll().map(c => c.name))
-  console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
-
   const { pathname } = request.nextUrl
   // Support both legacy `/login` and new `/auth/login` routes
   const isAuthRoute =

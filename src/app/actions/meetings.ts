@@ -215,6 +215,7 @@ export async function recordLeaveMeetingAction(meetingId: string, userId: string
       .from("meeting_participants")
       .update({
         left_at: new Date().toISOString(),
+        is_present: false,
       })
       .eq("meeting_id", meetingId)
       .eq("user_id", userId)

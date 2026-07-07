@@ -32,14 +32,14 @@ export default function QuickActions() {
     {
       title: "Students",
       description: "View students",
-      href: "/dashboard/faculty/students",
+      href: "/dashboard/faculty",
       icon: <Users size={18} color="#d97706" />,
       bg: "#fff7ed",
     },
     {
       title: "Timetable",
       description: "View today's schedule",
-      href: "/dashboard/timetable-builder",
+      href: "/dashboard/faculty/timetable",
       icon: <CalendarDays size={18} color="#7c3aed" />,
       bg: "#f5f3ff",
     },

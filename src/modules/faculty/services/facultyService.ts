@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import type { Faculty, FacultyWithStats, CreateFacultyInput, UpdateFacultyInput } from "../types/faculty.types"
+import { clearFacultyProfile, clearFacultySubjects, clearFacultyTimetable } from "@/app/dashboard/faculty/components/faculty-cache-v2"
 import { ROLES } from "@/constants/roles"
 
 export async function createSupabaseFacultyClient() {
@@ -125,6 +126,18 @@ export async function updateFaculty(
     .single()
 
   if (error) throw new Error(`Failed to update faculty: ${error.message}`)
+  try {
+    clearFacultyProfile(facultyId)
+    clearFacultySubjects(facultyId)
+    clearFacultyTimetable(facultyId, data?.institution_id)
+  } catch (e) {
+    console.warn("Failed to clear faculty cache:", e)
+  }
+  try {
+    if (process.env.CACHE_DEBUG === "1") {
+      console.debug("[faculty-service] cleared faculty cache for", facultyId)
+    }
+  } catch {}
   return data
 }
 

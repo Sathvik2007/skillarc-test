@@ -25,7 +25,10 @@ import { supabase } from "@/lib/supabase"
 import {
   endMeetingAction,
   postMeetingMessageAction,
-  getMeetingMessagesAction
+  getMeetingMessagesAction,
+  recordJoinMeetingAction,
+  recordLeaveMeetingAction,
+  getMeetingAnalyticsAction
 } from "@/app/actions/meetings"
 
 import Whiteboard from "@/components/video-meeting/whiteboard"
@@ -80,6 +83,10 @@ export function MeetingRoomClient({ user, meeting }: MeetingRoomClientProps) {
 
   // Notifications
   const [toast, setToast] = useState<{ message: string; type: "info" | "success" | "warning" | "error" } | null>(null)
+  const [meetingSummary, setMeetingSummary] = useState<any | null>(null)
+  const [showMeetingSummary, setShowMeetingSummary] = useState(false)
+  const joinRecordedRef = useRef(false)
+  const leaveRecordedRef = useRef(false)
 
   const addToast = (msg: string, type: "info" | "success" | "warning" | "error" = "info") => {
     setToast({ message: msg, type })
@@ -169,6 +176,24 @@ export function MeetingRoomClient({ user, meeting }: MeetingRoomClientProps) {
       jitsiApiRef.current.executeCommand("toggleShareScreen")
     }
   }
+
+  useEffect(() => {
+    const registerJoin = async () => {
+      if (!meeting?.id || !user?.id || joinRecordedRef.current) return
+      joinRecordedRef.current = true
+      await recordJoinMeetingAction(meeting.id, user.id)
+    }
+
+    void registerJoin()
+  }, [meeting?.id, user?.id])
+
+  useEffect(() => {
+    return () => {
+      if (!meeting?.id || !user?.id || leaveRecordedRef.current) return
+      leaveRecordedRef.current = true
+      void recordLeaveMeetingAction(meeting.id, user.id)
+    }
+  }, [meeting?.id, user?.id])
 
   // 2. Fetch Chat messages and subscribe to supabase Realtime Channel
   useEffect(() => {
@@ -265,15 +290,83 @@ export function MeetingRoomClient({ user, meeting }: MeetingRoomClientProps) {
     return `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`
   }
 
+  const buildMeetingSummary = async () => {
+    if (!meeting?.id) return
+
+    try {
+      const [leaveResult, analyticsResult] = await Promise.all([
+        recordLeaveMeetingAction(meeting.id, user.id),
+        getMeetingAnalyticsAction(meeting.id),
+      ])
+
+      if (!leaveResult.success && !leaveRecordedRef.current) {
+        leaveRecordedRef.current = true
+      }
+
+      if (!analyticsResult.success || !Array.isArray(analyticsResult.logs)) {
+        return null
+      }
+
+      const logs = analyticsResult.logs as any[]
+      const participants = logs.map((log) => {
+        const joinedAt = log.joined_at ? new Date(log.joined_at).getTime() : null
+        const leftAt = log.left_at ? new Date(log.left_at).getTime() : null
+        const durationSeconds = joinedAt && leftAt ? Math.max(0, Math.round((leftAt - joinedAt) / 1000)) : 0
+
+        return {
+          id: log.user_id,
+          name: log.user?.name || "Unknown",
+          email: log.user?.email || "",
+          role: log.user?.role || "student",
+          joinedAt: log.joined_at,
+          leftAt: log.left_at,
+          durationSeconds,
+          isPresent: log.is_present !== false,
+        }
+      })
+
+      const totalDurationSeconds = participants.reduce((sum, participant) => sum + participant.durationSeconds, 0)
+      const averageDurationSeconds = participants.length > 0 ? Math.round(totalDurationSeconds / participants.length) : 0
+      const presentCount = participants.filter((participant) => participant.isPresent).length
+
+      return {
+        totalParticipants: participants.length,
+        presentCount,
+        averageDurationSeconds,
+        totalDurationSeconds,
+        participants,
+      }
+    } catch (error) {
+      console.error("Error building meeting summary:", error)
+      return null
+    }
+  }
+
   // End / Leave call
   const handleEndCall = async () => {
+    if (leaveRecordedRef.current) {
+      setShowMeetingSummary(true)
+      return
+    }
+
+    leaveRecordedRef.current = true
+    await recordLeaveMeetingAction(meeting.id, user.id)
+
     if (user.role === "faculty") {
       await endMeetingAction(meeting.id, meeting.subject_id)
     }
+
+    const summary = await buildMeetingSummary()
+    setMeetingSummary(summary)
+    setShowMeetingSummary(true)
+
     if (jitsiApiRef.current) {
       try { jitsiApiRef.current.dispose() } catch (e) {}
     }
-    router.push(`/dashboard/${user.role}/subjects/${meeting.subject_id}`)
+
+    window.setTimeout(() => {
+      router.push(`/dashboard/${user.role}/subjects/${meeting.subject_id}`)
+    }, 1400)
   }
 
   const handleCopyLink = () => {
@@ -325,6 +418,55 @@ export function MeetingRoomClient({ user, meeting }: MeetingRoomClientProps) {
       {/* 2. Meeting Body Workspace */}
       <div className="flex-grow flex overflow-hidden relative">
         <FloatingReactions reactions={reactions} />
+
+        {showMeetingSummary && meetingSummary && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm">
+            <div className="w-[92%] max-w-2xl rounded-3xl border border-white/10 bg-slate-900/95 p-6 shadow-2xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-indigo-300">Meeting analysis</p>
+                  <h2 className="text-xl font-bold text-white">Attendance and duration summary</h2>
+                </div>
+                <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                  Completed
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3 mb-5">
+                <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Joined</p>
+                  <p className="text-xl font-bold text-white">{meetingSummary.presentCount}/{meetingSummary.totalParticipants}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Avg. duration</p>
+                  <p className="text-xl font-bold text-white">{Math.floor(meetingSummary.averageDurationSeconds / 60)}m</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-slate-950/80 p-3">
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500">Total session</p>
+                  <p className="text-xl font-bold text-white">{Math.floor(meetingSummary.totalDurationSeconds / 60)}m</p>
+                </div>
+              </div>
+
+              <div className="max-h-64 overflow-y-auto rounded-2xl border border-white/10 bg-slate-950/70 p-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Participants</p>
+                <div className="space-y-2">
+                  {meetingSummary.participants.map((participant: any) => (
+                    <div key={participant.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-slate-900/70 px-3 py-2 text-sm">
+                      <div>
+                        <p className="font-semibold text-white">{participant.name}</p>
+                        <p className="text-xs text-slate-500">{participant.email || participant.role}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-slate-200">{participant.isPresent ? "Joined" : "Left"}</p>
+                        <p className="text-xs text-slate-500">{Math.floor(participant.durationSeconds / 60)}m</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Video feed canvas */}
         <div className="flex-grow flex flex-col p-6 items-center justify-center relative overflow-hidden bg-slate-900/40">

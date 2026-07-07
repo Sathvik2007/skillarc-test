@@ -4,8 +4,6 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { loginAction } from "@/app/actions/auth"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -27,7 +25,7 @@ export default function LoginPage() {
         return
       }
 
-      await router.push("/dashboard")
+      router.push("/dashboard")
     } catch (err) {
       console.error("Login error:", err)
       setLoading(false)
@@ -35,336 +33,74 @@ export default function LoginPage() {
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        backgroundColor: "#f4f5f7",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontFamily: font,
-        padding: 24,
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          width: "100%",
-          maxWidth: 900,
-          borderRadius: 24,
-          overflow: "hidden",
-          boxShadow: "0 4px 24px rgba(0,0,0,0.08)",
-        }}
-      >
-        {/* Left — branding */}
-        <div
-          style={{
-            flex: 1,
-            background: "linear-gradient(135deg, #1e3a5f 0%, #1d4ed8 100%)",
-            padding: 48,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Logo */}
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 40 }}>
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  backgroundColor: "rgba(255,255,255,0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <span style={{ fontSize: 18 }}>📅</span>
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.16),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.08),_transparent_20%),linear-gradient(180deg,#f8fbff,#eff6ff)] flex items-center justify-center px-4 py-10">
+      <div className="grid w-full max-w-5xl grid-cols-1 gap-8 overflow-hidden rounded-[32px] border border-white/70 bg-white/90 shadow-[0_32px_80px_rgba(15,23,42,0.08)] backdrop-blur-xl lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-indigo-600 via-violet-600 to-sky-600 p-10 text-white">
+          <div className="absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.22),_transparent_55%)]" />
+          <div className="relative flex h-full flex-col justify-between gap-10">
+            <div>
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/15 text-xl">📅</div>
+                <span className="text-sm font-semibold uppercase tracking-[0.22em] text-white/80">SkillArc</span>
               </div>
-              <span
-                style={{
-                  fontSize: 18,
-                  fontWeight: 800,
-                  color: "#ffffff",
-                  letterSpacing: "-0.02em",
-                }}
-              >
-                SkillArc
-              </span>
+              <h2 className="text-3xl font-black tracking-[-0.04em] text-white">Academic Operations, simplified.</h2>
+              <p className="mt-4 max-w-sm text-sm leading-7 text-slate-100/90">Manage timetables, faculty workloads, and student schedules with a premium academic dashboard experience.</p>
             </div>
-
-            <h2
-              style={{
-                fontSize: 28,
-                fontWeight: 800,
-                color: "#ffffff",
-                lineHeight: 1.2,
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Academic Operations,
-              <br />
-              Simplified.
-            </h2>
-            <p
-              style={{
-                fontSize: 13,
-                color: "rgba(255,255,255,0.6)",
-                marginTop: 12,
-                lineHeight: 1.6,
-              }}
-            >
-              Manage timetables, faculty workloads,
-              <br />
-              and student schedules — all in one place.
-            </p>
-          </div>
-
-          {/* Mini timetable decoration */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            {[
-              { code: "DAA", bg: "#dbeafe", text: "#1d4ed8", width: "70%" },
-              { code: "DCN", bg: "#ede9fe", text: "#6d28d9", width: "55%" },
-              { code: "WT", bg: "#fef3c7", text: "#b45309", width: "80%" },
-            ].map((s) => (
-              <div
-                key={s.code}
-                style={{
-                  backgroundColor: s.bg,
-                  borderRadius: 8,
-                  padding: "6px 10px",
-                  width: s.width,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                }}
-              >
-                <span
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: s.text,
-                  }}
-                >
-                  {s.code}
-                </span>
-                <div
-                  style={{
-                    flex: 1,
-                    height: 4,
-                    borderRadius: 999,
-                    backgroundColor: "rgba(0,0,0,0.08)",
-                  }}
-                />
+            <div className="space-y-4 rounded-[26px] bg-white/10 p-6 backdrop-blur">
+              <div className="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">Ready for impact</div>
+              <div className="space-y-3">
+                <div className="rounded-3xl bg-white/10 p-4">
+                  <p className="text-sm font-semibold text-white">Fast login</p>
+                  <p className="mt-2 text-sm text-slate-200/90">Secure access with clear sign-in flow.</p>
+                </div>
+                <div className="rounded-3xl bg-white/10 p-4">
+                  <p className="text-sm font-semibold text-white">Educational focus</p>
+                  <p className="mt-2 text-sm text-slate-200/90">Designed around classrooms, schedules, and attendance.</p>
+                </div>
               </div>
-            ))}
-            <p
-              style={{
-                fontSize: 10,
-                color: "rgba(255,255,255,0.4)",
-                marginTop: 6,
-              }}
-            >
-              Timetable Builder · Live Preview
-            </p>
+            </div>
           </div>
         </div>
-
-        {/* Right — form */}
-        <div
-          style={{
-            width: 380,
-            backgroundColor: "#ffffff",
-            padding: 48,
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <h1
-            style={{
-              fontSize: 20,
-              fontWeight: 700,
-              color: "#111827",
-              letterSpacing: "-0.02em",
-              marginBottom: 4,
-            }}
-          >
-            Welcome back
-          </h1>
-          <p
-            style={{
-              fontSize: 12,
-              color: "#9ca3af",
-              marginBottom: 28,
-            }}
-          >
-            Sign in to your SkillArc account
-          </p>
-
-          {/* Error */}
+        <div className="p-10">
+          <div className="mb-8 space-y-3">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">Welcome back</p>
+            <h1 className="text-3xl font-black text-slate-950">Sign in to your SkillArc account</h1>
+            <p className="text-sm text-slate-500">Enter your institution email and password to continue.</p>
+          </div>
           {error && (
-            <div
-              style={{
-                backgroundColor: "#fee2e2",
-                border: "1px solid #fecaca",
-                borderRadius: 8,
-                padding: "8px 12px",
-                marginBottom: 16,
-              }}
-            >
-              <p style={{ fontSize: 12, color: "#991b1b" }}>{error}</p>
+            <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              {error}
             </div>
           )}
-
-          {/* Email */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Email address
-          </label>
-          <input
-            type="email"
-            placeholder="you@institution.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 16,
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Password */}
-          <label
-            style={{
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#374151",
-              marginBottom: 6,
-              display: "block",
-            }}
-          >
-            Password
-          </label>
-          <input
-            type="password"
-            placeholder="••••••••"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              fontSize: 13,
-              border: "1px solid #e5e7eb",
-              borderRadius: 10,
-              backgroundColor: "#f9fafb",
-              color: "#111827",
-              outline: "none",
-              marginBottom: 8,
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Forgot password */}
-          <div style={{ textAlign: "right", marginBottom: 24 }}>
-            <a
-              href="/forgot-password"
-              style={{
-                fontSize: 11,
-                color: "#1d4ed8",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              Forgot password?
-            </a>
+          <div className="space-y-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Email address</label>
+              <input
+                type="email"
+                placeholder="you@institution.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-700">Password</label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+              />
+            </div>
           </div>
-
-          {/* Submit */}
           <button
             onClick={handleLogin}
             disabled={loading}
-            style={{
-              width: "100%",
-              padding: "11px 0",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "#ffffff",
-              backgroundColor: loading ? "#93c5fd" : "#1d4ed8",
-              border: "none",
-              borderRadius: 10,
-              cursor: loading ? "not-allowed" : "pointer",
-              transition: "background 0.15s",
-              marginBottom: 24,
-              fontFamily: font,
-            }}
+            className="mt-10 inline-flex w-full items-center justify-center rounded-3xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? "Signing in..." : "Sign in"}
           </button>
-
-          {/* Divider */}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              marginBottom: 24,
-            }}
-          >
-            <div
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: "#f3f4f6",
-              }}
-            />
-            <span style={{ fontSize: 11, color: "#9ca3af" }}>or</span>
-            <div
-              style={{
-                flex: 1,
-                height: 1,
-                backgroundColor: "#f3f4f6",
-              }}
-            />
-          </div>
-
-          {/* Signup link */}
-          <p
-            style={{
-              fontSize: 12,
-              color: "#6b7280",
-              textAlign: "center",
-            }}
-          >
-            Don't have an account?{" "}
-            <a
-              href="/signup"
-              style={{
-                color: "#1d4ed8",
-                fontWeight: 600,
-                textDecoration: "none",
-              }}
-            >
-              Sign up
-            </a>
-          </p>
         </div>
       </div>
     </div>

@@ -2,13 +2,9 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import {
-  Building2, Users, GraduationCap, BookOpen,
-  LayoutGrid, Clock, ChevronRight, Mail, Plus
-} from "lucide-react"
+import { Building2, Users, GraduationCap, BookOpen, Plus, Mail, Clock, ChevronRight } from "lucide-react"
 import { ROLES } from "@/constants/roles"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
 type Status = "idle" | "loading" | "success" | "error"
 
 interface Institution { id: string; name: string; domain: string | null }
@@ -35,9 +31,10 @@ export default function InstitutionAdminDashboardClient({
   const [inviteError, setInviteError] = useState("")
 
   async function handleInvite() {
-    if (!inviteEmail.trim()) return
+    if (!inviteEmail.trim() || !institution?.id) return
     setInviteStatus("loading")
     setInviteError("")
+
     try {
       const res = await fetch("/api/invite-user", {
         method: "POST",
@@ -45,291 +42,182 @@ export default function InstitutionAdminDashboardClient({
         body: JSON.stringify({
           email: inviteEmail,
           role: inviteRole,
-          institutionId: institution?.id,
+          institutionId: institution.id,
         }),
       })
+
       if (!res.ok) {
         const err = await res.json()
         throw new Error(err.error || "Failed to invite")
       }
+
       setInviteStatus("success")
       setInviteEmail("")
-      setTimeout(() => { setInviteStatus("idle"); router.refresh() }, 2000)
+      setTimeout(() => {
+        setInviteStatus("idle")
+        router.refresh()
+      }, 2000)
     } catch (err: any) {
-      setInviteError(err.message)
       setInviteStatus("error")
+      setInviteError(err.message)
     }
   }
 
   const statCards = [
-    { label: "Faculty",  value: stats.faculty,  accent: "#d1fae5", text: "#065f46", icon: <Users size={17} color="#065f46" /> },
-    { label: "Students", value: stats.students, accent: "#dbeafe", text: "#1d4ed8", icon: <GraduationCap size={17} color="#1d4ed8" /> },
-    { label: "Courses",  value: stats.courses,  accent: "#fef3c7", text: "#b45309", icon: <BookOpen size={17} color="#b45309" /> },
+    { label: "Faculty", value: stats.faculty, accent: "bg-emerald-100 text-emerald-700", icon: <Users size={18} color="#065f46" /> },
+    { label: "Students", value: stats.students, accent: "bg-sky-100 text-sky-700", icon: <GraduationCap size={18} color="#1d4ed8" /> },
+    { label: "Courses", value: stats.courses, accent: "bg-amber-100 text-amber-700", icon: <BookOpen size={18} color="#b45309" /> },
   ]
-
-  const quickActions = [
-    { label: "Departments", desc: "Manage all departments",  icon: "🏢", href: "/dashboard/institution-admin/departments" },
-    { label: "Programs",    desc: "Manage programs",         icon: "🎓", href: "/dashboard/institution-admin/programs" },
-    { label: "Sections",    desc: "Manage sections",         icon: "🧩", href: "/dashboard/institution-admin/sections" },
-    { label: "Faculty",     desc: "View & invite faculty",   icon: "👨‍🏫", href: "/dashboard/institution-admin/faculty" },
-    { label: "Students",    desc: "View & invite students",  icon: "👩‍🎓", href: "/dashboard/institution-admin/students" },
-    { label: "Parents",     desc: "Manage parents",          icon: "👨‍👩‍👧", href: "/dashboard/institution-admin/parents" },
-    { label: "Subjects",    desc: "Manage subjects",         icon: "📘", href: "/dashboard/institution-admin/subjects" },
-    { label: "Timetable",   desc: "View & manage timetable", icon: "📅", href: "/dashboard/timetable-builder" },
-  ]
-
-  const roleBadgeColor: Record<string, { bg: string; text: string }> = {
-    [ROLES.FACULTY]:           { bg: "#d1fae5", text: "#065f46" },
-    [ROLES.STUDENT]:           { bg: "#dbeafe", text: "#1d4ed8" },
-    [ROLES.HOD]:               { bg: "#ede9fe", text: "#6d28d9" },
-    [ROLES.PROGRAM_HEAD]:      { bg: "#fef3c7", text: "#b45309" },
-    [ROLES.INSTITUTION_ADMIN]: { bg: "#fee2e2", text: "#991b1b" },
-  }
 
   const hour = new Date().getHours()
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening"
 
   return (
-    <div style={{ fontFamily: font, maxWidth: 960, margin: "0 auto" }}>
-
-      {/* Header */}
-      <div style={{
-        backgroundColor: "#fff", borderRadius: 16, padding: "20px 24px",
-        border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: "linear-gradient(135deg, #1e3a5f, #1d4ed8)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <Building2 size={20} color="#fff" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em" }}>
-              {institution?.name ?? "Institution Dashboard"}
-            </h1>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>
-              {greeting}, Admin 👋 &nbsp;·&nbsp; {institution?.domain ?? ""}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => router.push("/dashboard/institution-admin/invite")}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", borderRadius: 10, border: "none",
-            backgroundColor: "#1d4ed8", color: "#fff",
-            fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font,
-          }}
-        >
-          <Plus size={14} /> Invite Member
-        </button>
-      </div>
-
-      {/* Stats */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-        {statCards.map(s => (
-          <div key={s.label} style={{
-            backgroundColor: "#fff", borderRadius: 14, padding: "16px 20px",
-            border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-            display: "flex", alignItems: "center", gap: 14,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, backgroundColor: s.accent,
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              {s.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: 22, fontWeight: 800, color: s.text, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{s.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Quick Actions */}
-      <div style={{
-        backgroundColor: "#fff", borderRadius: 16, padding: 24,
-        border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        marginBottom: 16,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-          <LayoutGrid size={15} color="#6b7280" />
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Quick Actions</p>
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-          {quickActions.map(a => (
-            <div
-              key={a.label}
-              onClick={() => router.push(a.href)}
-              style={{
-                border: "1px solid #f3f4f6", borderRadius: 12, padding: "14px 16px",
-                cursor: "pointer", transition: "all 0.15s", backgroundColor: "#fafafa",
-                display: "flex", alignItems: "center", justifyContent: "space-between",
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLDivElement).style.backgroundColor = "#eff6ff"
-                ;(e.currentTarget as HTMLDivElement).style.borderColor = "#bfdbfe"
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLDivElement).style.backgroundColor = "#fafafa"
-                ;(e.currentTarget as HTMLDivElement).style.borderColor = "#f3f4f6"
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ fontSize: 20 }}>{a.icon}</span>
-                <div>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{a.label}</p>
-                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>{a.desc}</p>
-                </div>
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+      <div className="space-y-6">
+        <header className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200/30">
+                <Building2 size={24} />
               </div>
-              <ChevronRight size={14} color="#d1d5db" />
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Institution dashboard</p>
+                <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">{greeting}, admin</h1>
+                <p className="mt-2 text-sm text-slate-500">{institution?.name ?? "Institution dashboard"}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push("/dashboard/institution-admin")}
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200/30 transition hover:bg-indigo-700"
+            >
+              <Mail size={16} /> Invite member
+            </button>
+          </div>
+        </header>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {statCards.map((card) => (
+            <div key={card.label} className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">
+              <div className={`inline-flex h-12 w-12 items-center justify-center rounded-3xl ${card.accent}`}>
+                {card.icon}
+              </div>
+              <p className="mt-4 text-2xl font-bold text-slate-950">{card.value}</p>
+              <p className="mt-1 text-sm font-semibold text-slate-700">{card.label}</p>
             </div>
           ))}
         </div>
-      </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "360px 1fr", gap: 16 }}>
-
-        {/* Invite card */}
-        <div style={{
-          backgroundColor: "#fff", borderRadius: 16, padding: 24,
-          border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
-            <Mail size={15} color="#6b7280" />
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Invite Member</p>
+        <div className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Quick actions</p>
+              <h2 className="mt-3 text-xl font-semibold text-slate-950">Manage institutional operations</h2>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { label: "Departments", href: "/dashboard/institution-admin/departments" },
+                { label: "Programs", href: "/dashboard/institution-admin/programs" },
+                { label: "Faculty", href: "/dashboard/institution-admin/faculty" },
+              ].map((action) => (
+                <button
+                  key={action.label}
+                  onClick={() => router.push(action.href)}
+                  className="rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700"
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
           </div>
-
-          {inviteStatus === "success" && (
-            <div style={{
-              backgroundColor: "#f0fdf4", border: "1px solid #bbf7d0",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 14,
-              display: "flex", alignItems: "center", gap: 8,
-            }}>
-              <span>🎉</span>
-              <p style={{ fontSize: 12, color: "#166534", margin: 0, fontWeight: 500 }}>Invite sent!</p>
-            </div>
-          )}
-          {inviteStatus === "error" && (
-            <div style={{
-              backgroundColor: "#fee2e2", border: "1px solid #fecaca",
-              borderRadius: 8, padding: "10px 14px", marginBottom: 14,
-            }}>
-              <p style={{ fontSize: 12, color: "#991b1b", margin: 0 }}>{inviteError}</p>
-            </div>
-          )}
-
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-            Email <span style={{ color: "#ef4444" }}>*</span>
-          </label>
-          <input
-            placeholder="faculty@college.edu"
-            value={inviteEmail}
-            type="email"
-            onChange={e => setInviteEmail(e.target.value)}
-            style={{
-              width: "100%", padding: "9px 12px", fontSize: 13,
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              backgroundColor: "#f9fafb", color: "#111827",
-              outline: "none", marginBottom: 12, boxSizing: "border-box", fontFamily: font,
-            }}
-          />
-
-          <label style={{ fontSize: 11, fontWeight: 600, color: "#374151", marginBottom: 5, display: "block" }}>
-            Role
-          </label>
-          <select
-            value={inviteRole}
-            onChange={e => setInviteRole(e.target.value)}
-            style={{
-              width: "100%", padding: "9px 12px", fontSize: 13,
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              backgroundColor: "#f9fafb", color: "#111827",
-              outline: "none", marginBottom: 16, boxSizing: "border-box", fontFamily: font,
-            }}
-          >
-            <option value={ROLES.FACULTY}>Faculty</option>
-            <option value={ROLES.STUDENT}>Student</option>
-            <option value={ROLES.HOD}>Head of Department</option>
-            <option value={ROLES.PROGRAM_HEAD}>Program Head</option>
-          </select>
-
-          <button
-            onClick={handleInvite}
-            disabled={!inviteEmail.trim() || inviteStatus === "loading"}
-            style={{
-              width: "100%", padding: "10px 0", fontSize: 13, fontWeight: 700,
-              color: "#fff",
-              backgroundColor: !inviteEmail.trim() ? "#e5e7eb" : inviteStatus === "loading" ? "#93c5fd" : "#1d4ed8",
-              border: "none", borderRadius: 10,
-              cursor: !inviteEmail.trim() || inviteStatus === "loading" ? "not-allowed" : "pointer",
-              transition: "background 0.15s", fontFamily: font,
-            }}
-          >
-            {inviteStatus === "loading" ? "Sending…" : "Send Invite"}
-          </button>
         </div>
 
-        {/* Recent members */}
-        <div style={{
-          backgroundColor: "#fff", borderRadius: 16, padding: 24,
-          border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 18 }}>
-            <Clock size={15} color="#6b7280" />
-            <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>Recent Members</p>
-          </div>
+        <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+          <aside className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center gap-4 pb-4">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-indigo-100 text-indigo-700">
+                <Clock size={18} />
+              </div>
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Parent engagement</p>
+                <h2 className="mt-3 text-xl font-semibold text-slate-950">Invite and connect</h2>
+              </div>
+            </div>
+            <div className="space-y-4">
+              {inviteStatus === "success" && (
+                <div className="rounded-3xl bg-emerald-50 p-4 text-sm text-emerald-700">Invite sent successfully.</div>
+              )}
+              {inviteStatus === "error" && (
+                <div className="rounded-3xl bg-rose-50 p-4 text-sm text-rose-700">{inviteError}</div>
+              )}
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Email</label>
+                <input
+                  value={inviteEmail}
+                  type="email"
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  placeholder="faculty@college.edu"
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-slate-700">Role</label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="mt-3 w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+                >
+                  <option value={ROLES.FACULTY}>Faculty</option>
+                  <option value={ROLES.STUDENT}>Student</option>
+                  <option value={ROLES.HOD}>Head of Department</option>
+                  <option value={ROLES.PROGRAM_HEAD}>Program Head</option>
+                </select>
+              </div>
+              <button
+                onClick={handleInvite}
+                disabled={!inviteEmail.trim() || inviteStatus === "loading"}
+                className="mt-2 w-full rounded-3xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
+                {inviteStatus === "loading" ? "Sending invite..." : "Send invite"}
+              </button>
+            </div>
+          </aside>
 
-          {recentUsers.length === 0 ? (
-            <div style={{
-              textAlign: "center", padding: "32px 0",
-              border: "1.5px dashed #e5e7eb", borderRadius: 12,
-            }}>
-              <p style={{ fontSize: 13, color: "#9ca3af" }}>No members yet</p>
-              <p style={{ fontSize: 11, color: "#d1d5db", marginTop: 4 }}>Invite someone to get started</p>
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Recent members</p>
+                <h2 className="mt-3 text-xl font-semibold text-slate-950">Latest invites</h2>
+              </div>
+              <button
+                onClick={() => router.push("/dashboard/institution-admin/students")}
+                className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition hover:bg-slate-200"
+              >
+                View all
+              </button>
             </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {recentUsers.map(u => {
-                const badge = roleBadgeColor[u.role] ?? { bg: "#f3f4f6", text: "#374151" }
-                return (
-                  <div key={u.id} style={{
-                    border: "1px solid #f3f4f6", borderRadius: 12, padding: "11px 14px",
-                    display: "flex", alignItems: "center", gap: 12,
-                  }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8, backgroundColor: "#f3f4f6",
-                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-                    }}>
-                      <Mail size={13} color="#6b7280" />
+            <div className="space-y-4">
+              {recentUsers.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
+                  No recent users to display.
+                </div>
+              ) : (
+                recentUsers.map((user) => (
+                  <div key={user.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-950 truncate">{user.email}</p>
+                        <p className="mt-1 text-xs text-slate-500">{formatDate(user.created_at)}</p>
+                      </div>
+                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-600">
+                        {user.role}
+                      </span>
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{
-                        fontSize: 13, fontWeight: 600, color: "#111827",
-                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      }}>
-                        {u.email}
-                      </p>
-                      <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>
-                        {formatDate(u.created_at)}
-                      </p>
-                    </div>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 6,
-                      backgroundColor: badge.bg, color: badge.text,
-                      textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0,
-                    }}>
-                      {u.role.replace(/_/g, " ")}
-                    </span>
                   </div>
-                )
-              })}
+                ))
+              )}
             </div>
-          )}
+          </section>
         </div>
       </div>
     </div>

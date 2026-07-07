@@ -2,9 +2,8 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { BookOpen, Award, CheckCircle2, ChevronRight, UserCheck, ShieldCheck, Mail, Calendar } from "lucide-react"
-
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
+import { BookOpen, Award, UserCheck, Mail, Calendar, ChevronRight } from "lucide-react"
+import { ROLES } from "@/constants/roles"
 
 interface Subject {
   id: string
@@ -21,8 +20,7 @@ export default function ParentDashboardClient({
   subjects: Subject[]
 }) {
   const router = useRouter()
-  
-  // High-fidelity Mock data for child visual metrics
+
   const [childInfo] = useState({
     name: "Alex Doe",
     grade: "Grade 10 - Batch A",
@@ -33,166 +31,118 @@ export default function ParentDashboardClient({
       { period: "P2", time: "10:15 - 11:15", code: "DCN", subject: "Data Communication & Networking", faculty: "Dr. Grace Hopper" },
       { period: "P3", time: "11:30 - 12:30", code: "WT", subject: "Web Technologies", faculty: "Prof. Richard Feynman" },
       { period: "P4", time: "14:00 - 15:00", code: "TOC", subject: "Theory of Computation", faculty: "Dr. Alan Turing" },
-    ]
+    ],
   })
 
   return (
-    <div style={{ fontFamily: font, maxWidth: 960, margin: "0 auto" }}>
-      
-      {/* Header */}
-      <div style={{
-        backgroundColor: "#fff", borderRadius: 16, padding: "20px 24px",
-        border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-        marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "space-between",
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            background: "linear-gradient(135deg, #4f46e5, #0ea5e9)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}>
-            <ShieldCheck size={20} color="#fff" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: 16, fontWeight: 700, color: "#111827", letterSpacing: "-0.02em" }}>
-              Parental Overview Portal
-            </h1>
-            <p style={{ fontSize: 12, color: "#9ca3af", marginTop: 1 }}>
-              {parent.institution} &nbsp;·&nbsp; Parent: <strong>{parent.name}</strong> &nbsp;·&nbsp; Ward: <strong>{childInfo.name} ({childInfo.grade})</strong>
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={() => alert("Notification sent to student advisor.")}
-          style={{
-            display: "flex", alignItems: "center", gap: 6,
-            padding: "8px 14px", borderRadius: 10, border: "none",
-            backgroundColor: "#4f46e5", color: "#fff",
-            fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: font,
-          }}
-        >
-          <Mail size={13} /> Message Advisor
-        </button>
-      </div>
-
-      {/* Ward Stats Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 16 }}>
-        {[
-          { label: "Attendance Record", value: `${childInfo.attendance}%`, accent: "#d1fae5", text: "#065f46", icon: <UserCheck size={17} color="#065f46" /> },
-          { label: "Grade Average (CGPA)", value: childInfo.cgpa, accent: "#dbeafe", text: "#1d4ed8", icon: <Award size={17} color="#1d4ed8" /> },
-          { label: "Enrolled Courses", value: subjects.length, accent: "#ede9fe", text: "#6d28d9", icon: <BookOpen size={17} color="#6d28d9" /> },
-        ].map(s => (
-          <div key={s.label} style={{
-            backgroundColor: "#fff", borderRadius: 14, padding: "16px 20px",
-            border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
-            display: "flex", alignItems: "center", gap: 14,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, backgroundColor: s.accent,
-              display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-            }}>
-              {s.icon}
-            </div>
-            <div>
-              <p style={{ fontSize: 22, fontWeight: 800, color: s.text, lineHeight: 1 }}>{s.value}</p>
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 3 }}>{s.label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Schedule and Subjects Split Layout */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: 16 }}>
-        
-        {/* Left Column: Today's Schedule Timeline */}
-        <div style={{
-          backgroundColor: "#fff", borderRadius: 16, padding: 24,
-          border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-          display: "flex", flexDirection: "column", gap: 16,
-        }}>
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Today's Visual Timetable</h2>
-            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Visual period flow for {childInfo.name} today</p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            {childInfo.weeklySchedule.map((s, idx) => (
-              <div key={s.period} style={{
-                border: "1px solid #f3f4f6", borderRadius: 14, padding: 14,
-                display: "flex", gap: 14, alignItems: "center",
-                backgroundColor: "#fafafa",
-              }}>
-                <div style={{
-                  width: 38, height: 38, borderRadius: 10,
-                  background: "linear-gradient(135deg, #e0e7ff, #bfdbfe)",
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, fontWeight: 800, color: "#4f46e5", flexShrink: 0,
-                }}>
-                  {s.period}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <h3 style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{s.code} - {s.subject}</h3>
-                    <span style={{ fontSize: 10, color: "#9ca3af", display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <Calendar size={11} /> {s.time}
-                    </span>
-                  </div>
-                  <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>
-                    Faculty: <strong>{s.faculty}</strong>
-                  </p>
-                </div>
+    <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
+      <div className="space-y-6">
+        <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200/30">
+                <span className="text-2xl">👨‍👩‍👧</span>
               </div>
-            ))}
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">Parent overview</p>
+                <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Hi, {parent.name}</h1>
+                <p className="mt-2 text-sm text-slate-500">{parent.institution} · {parent.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => router.push("/dashboard/parent")}
+              className="inline-flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-200/30 transition hover:bg-indigo-700"
+            >
+              <Mail size={16} /> Message advisor
+            </button>
+          </div>
+        </section>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          <div className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-700">
+              <UserCheck size={20} />
+            </div>
+            <p className="mt-4 text-2xl font-bold text-slate-950">{childInfo.attendance}%</p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">Attendance</p>
+            <p className="mt-2 text-sm text-slate-500">Current attendance for {childInfo.name}</p>
+          </div>
+          <div className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-violet-100 text-violet-700">
+              <Award size={20} />
+            </div>
+            <p className="mt-4 text-2xl font-bold text-slate-950">{childInfo.cgpa}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">Academic grade</p>
+            <p className="mt-2 text-sm text-slate-500">Latest cumulative point average</p>
+          </div>
+          <div className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">
+            <div className="inline-flex h-12 w-12 items-center justify-center rounded-3xl bg-sky-100 text-sky-700">
+              <BookOpen size={20} />
+            </div>
+            <p className="mt-4 text-2xl font-bold text-slate-950">{subjects.length}</p>
+            <p className="mt-1 text-sm font-semibold text-slate-700">Courses</p>
+            <p className="mt-2 text-sm text-slate-500">Enrolled subjects for the current term</p>
           </div>
         </div>
 
-        {/* Right Column: Dynamic Enrolled Subjects */}
-        <div style={{
-          backgroundColor: "#fff", borderRadius: 16, padding: 24,
-          border: "1px solid #f3f4f6", boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-          display: "flex", flexDirection: "column", gap: 14,
-        }}>
-          <div>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>Enrolled Courses</h2>
-            <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>Academic curriculum subjects tracking</p>
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: "360px", overflowY: "auto", paddingRight: 4 }}>
-            {subjects.length === 0 ? (
-              <div style={{
-                textAlign: "center", padding: "40px 0",
-                border: "1.5px dashed #e5e7eb", borderRadius: 12,
-              }}>
-                <p style={{ fontSize: 13, color: "#9ca3af" }}>No subjects assigned</p>
-                <p style={{ fontSize: 11, color: "#d1d5db", marginTop: 4 }}>Wait for HOD setup.</p>
+        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Weekly schedule</p>
+                <h2 className="mt-3 text-xl font-semibold text-slate-950">Today’s timetable</h2>
               </div>
-            ) : (
-              subjects.map(su => (
-                <div key={su.id} style={{
-                  border: "1px solid #f3f4f6", borderRadius: 12, padding: "10px 12px",
-                  display: "flex", alignItems: "center", justifyContent: "space-between",
-                  backgroundColor: "#fff",
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <div style={{
-                      width: 32, height: 32, borderRadius: 8, backgroundColor: "#e0f2fe",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13,
-                    }}>
-                      📘
-                    </div>
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">{childInfo.grade}</span>
+            </div>
+            <div className="space-y-4">
+              {childInfo.weeklySchedule.map((session) => (
+                <div key={session.period} className="rounded-3xl border border-slate-200 bg-slate-50 p-4 transition hover:border-indigo-200">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p style={{ fontSize: 12, fontWeight: 600, color: "#111827" }}>{su.name}</p>
-                      <p style={{ fontSize: 10, color: "#9ca3af", marginTop: 1 }}>{su.code} &nbsp;·&nbsp; {su.facultyName}</p>
+                      <p className="text-sm font-semibold text-slate-900">{session.code} · {session.subject}</p>
+                      <p className="mt-2 text-sm text-slate-500">{session.faculty}</p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-slate-600 shadow-sm">
+                      <Calendar size={14} /> {session.time}
                     </div>
                   </div>
-                  <ChevronRight size={13} color="#d1d5db" />
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          </section>
 
+          <aside className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+            <div className="flex items-center justify-between gap-4 pb-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Preferred academic focus</p>
+                <h2 className="mt-3 text-xl font-semibold text-slate-950">Course overview</h2>
+              </div>
+              <button className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-indigo-700 transition hover:bg-indigo-100">
+                View child report
+              </button>
+            </div>
+            <div className="grid gap-4">
+              {subjects.length === 0 ? (
+                <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                  No subjects are assigned yet.
+                </div>
+              ) : (
+                subjects.map((subject) => (
+                  <div key={subject.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">{subject.name}</p>
+                        <p className="mt-1 text-xs text-slate-500">{subject.code}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-slate-400" />
+                    </div>
+                    <p className="mt-3 text-sm text-slate-500">Faculty: {subject.facultyName}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   )

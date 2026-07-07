@@ -65,10 +65,10 @@ export default function AdminDashboardClient({
   const quickActions = [
     { label: "Departments",  desc: "Manage all departments",   icon: "🏢", href: "/dashboard/institution-admin/departments" },
     { label: "Programs",     desc: "Manage programs",          icon: "🎓", href: "/dashboard/institution-admin/programs" },
-    { label: "Teachers",     desc: "View & invite faculty",    icon: "👨‍🏫", href: "/dashboard/institution-admin/teachers" },
+    { label: "Teachers",     desc: "View & invite faculty",    icon: "👨‍🏫", href: "/dashboard/institution-admin/faculty" },
     { label: "Students",     desc: "View & invite students",   icon: "👩‍🎓", href: "/dashboard/institution-admin/students" },
     { label: "Subjects",     desc: "Manage subjects",          icon: "📘", href: "/dashboard/institution-admin/subjects" },
-    { label: "Timetable",    desc: "View & manage timetable",  icon: "📅", href: "/dashboard/timetable-builder" },
+    { label: "Timetable",    desc: "View & manage timetable",  icon: "📅", href: "/dashboard/institution-admin/timetable" },
   ]
 
   const roleBadgeColor: Record<string, { bg: string; text: string }> = {
@@ -109,7 +109,7 @@ export default function AdminDashboardClient({
           </div>
         </div>
         <button
-          onClick={() => router.push("/dashboard/institution-admin/invite")}
+          onClick={() => router.push("/dashboard/institution-admin")}
           style={{
             display: "flex", alignItems: "center", gap: 6,
             padding: "8px 14px", borderRadius: 10, border: "none",
