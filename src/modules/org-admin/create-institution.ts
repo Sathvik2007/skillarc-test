@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { revalidatePath } from "next/cache"
 import { ROLES } from "@/constants/roles"
 import { clearInstitutionName } from "@/app/dashboard/faculty/components/faculty-cache-v2"
+import { getRequestAppOrigin } from "@/lib/invite-user"
 
 export async function createInstitution(data: {
   name: string
@@ -32,7 +33,7 @@ export async function createInstitution(data: {
     .single()
   if (error) throw error
 
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000"
+  const origin = await getRequestAppOrigin()
   const res = await fetch(`${origin}/api/invite-user`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

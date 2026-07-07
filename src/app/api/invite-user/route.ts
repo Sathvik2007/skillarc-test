@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase-admin"
+import { resolveAppOrigin } from "@/lib/invite-user"
 import { NextResponse } from "next/server"
 
 export async function POST(req: Request) {
@@ -12,7 +13,7 @@ export async function POST(req: Request) {
   }
 
   const supabase = createSupabaseAdminClient()
-  const origin = process.env.NEXT_PUBLIC_APP_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000"
+  const origin = resolveAppOrigin()
   const redirectTo = `${origin}/auth/callback`
 
   try {
