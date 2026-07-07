@@ -43,36 +43,36 @@ export default function OrgAdminDashboardClient({
     if (!isValid) return
     setCreateStatus("loading")
     setErrorMsg("")
-    try {
-      await createInstitution({ name, domain: domain || undefined, adminEmail })
+    const res = await createInstitution({ name, domain: domain || undefined, adminEmail })
+    if (res && !res.success) {
+      setErrorMsg(res.error || "Something went wrong.")
+      setCreateStatus("error")
+    } else {
       setCreateStatus("success")
       setName("")
       setDomain("")
       setAdminEmail("")
       startTransition(() => router.refresh())
-    } catch (err: any) {
-      setErrorMsg(err?.message || "Something went wrong.")
-      setCreateStatus("error")
     }
   }
 
   async function handleDelete(id: string) {
-    try {
-      await deleteInstitution(id)
+    const res = await deleteInstitution(id)
+    if (res && !res.success) {
+      alert(res.error || "Failed to delete institution")
+    } else {
       setEditingId(null)
       startTransition(() => router.refresh())
-    } catch (err: any) {
-      alert(err?.message)
     }
   }
 
   async function handleEdit(id: string) {
-    try {
-      await updateInstitution(id, { name: editName, domain: editDomain || undefined })
+    const res = await updateInstitution(id, { name: editName, domain: editDomain || undefined })
+    if (res && !res.success) {
+      alert(res.error || "Failed to update institution")
+    } else {
       setEditingId(null)
       startTransition(() => router.refresh())
-    } catch (err: any) {
-      alert(err?.message)
     }
   }
 
