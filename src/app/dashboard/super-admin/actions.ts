@@ -15,9 +15,14 @@ async function requireSuperAdmin() {
   const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).single()
   if (profile?.role !== ROLES.SUPER_ADMIN) return { error: "Forbidden", supabase: null, adminClient: null }
 
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is missing. Please configure it in your environment variables / Vercel settings.");
+  }
+
   const adminClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    serviceRoleKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   )
 

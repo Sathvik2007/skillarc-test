@@ -103,6 +103,79 @@ export default async function StudentSubjectDetailPage({ params }: PageProps) {
     .eq("section_id", studentSectionId)
     .order("created_at", { ascending: false })
 
+  // 7. Fetch Attendance records for this subject + section
+  let attendanceEntries: any[] = []
+  let attendanceSummary = {
+    total: 0,
+    present: 0,
+    absent: 0,
+    late: 0,
+    rate: 0,
+  }
+
+  if (studentSectionId) {
+    const { data: sessions = [] } = await supabase
+      .from("attendance_sessions")
+      .select("id, attendance_date, period, faculty_id")
+      .eq("subject_id", subjectId)
+      .eq("section_id", studentSectionId)
+      .order("attendance_date", { ascending: false })
+      .order("period")
+
+    const sessionIds = (sessions ?? []).map((session: any) => session.id)
+
+    const { data: records = [] } = sessionIds.length
+      ? await supabase
+          .from("attendance_records")
+          .select("session_id, status")
+          .eq("student_id", user.id)
+          .in("session_id", sessionIds)
+      : { data: [] }
+
+    const recordMap = new Map((records ?? []).map((record: any) => [record.session_id, record]))
+
+    const facultyIds = Array.from(new Set((sessions ?? []).map((s: any) => s.faculty_id).filter(Boolean))) as string[]
+    let facultyMap = new Map<string, string>()
+    if (facultyIds.length) {
+      const { data: faculties = [] } = await supabase
+        .from("users")
+        .select("id, name")
+        .in("id", facultyIds)
+
+      ;(faculties ?? []).forEach((fac: any) => {
+        facultyMap.set(fac.id, fac.name)
+      })
+    }
+
+    attendanceEntries = (sessions ?? []).map((session: any) => {
+      const record = recordMap.get(session.id)
+      const facName = session.faculty_id ? facultyMap.get(session.faculty_id) : undefined
+
+      return {
+        id: session.id,
+        date: session.attendance_date,
+        period: session.period,
+        facultyName: facName ?? "Faculty pending",
+        status: record?.status ?? "NOT_MARKED",
+      }
+    })
+
+    const markedEntries = attendanceEntries.filter((entry) => entry.status !== "NOT_MARKED")
+    const totalRecords = markedEntries.length
+    const presentCount = markedEntries.filter((entry) => entry.status === "PRESENT").length
+    const absentCount = markedEntries.filter((entry) => entry.status === "ABSENT").length
+    const lateCount = markedEntries.filter((entry) => entry.status === "LATE").length
+    const effectivePresent = presentCount + lateCount
+
+    attendanceSummary = {
+      total: totalRecords,
+      present: presentCount,
+      absent: absentCount,
+      late: lateCount,
+      rate: totalRecords > 0 ? Math.round((effectivePresent / totalRecords) * 100) : 0,
+    }
+  }
+
   return (
     <StudentSubjectDetailClient
       studentId={user.id}
@@ -114,6 +187,8 @@ export default async function StudentSubjectDetailPage({ params }: PageProps) {
       submissions={submissions ?? []}
       classmates={classmates ?? []}
       meetings={meetings ?? []}
+      attendanceEntries={attendanceEntries}
+      attendanceSummary={attendanceSummary}
     />
   )
 }

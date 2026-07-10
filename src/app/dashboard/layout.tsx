@@ -13,10 +13,8 @@ export default function DashboardLayout({
         <Sidebar />
         <div className="flex flex-col flex-1 min-w-0">
           <Navbar />
-          <main className="p-6 md:p-8 lg:p-10">
-            <div className="glass-panel rounded-[28px] border border-[rgba(15,23,42,0.06)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] min-h-[calc(100vh-90px)]">
-              {children}
-            </div>
+          <main className="p-6 md:p-8 lg:p-10 flex-1 min-w-0">
+            {children}
           </main>
         </div>
       </div>

@@ -81,7 +81,6 @@ const roleMenus: Record<Role, MenuItem[]> = {
 
   [ROLES.FACULTY]: [
     { name: "Overview", icon: LayoutDashboard, path: "/dashboard/faculty" },
-    { name: "Attendance", icon: ClipboardList, path: "/dashboard/faculty/attendance" },
     { name: "Subjects", icon: BookOpen, path: "/dashboard/faculty/subjects" },
     { name: "Timetable", icon: Calendar, path: "/dashboard/faculty/timetable" },
     { name: "Events", icon: Calendar, path: "/dashboard/faculty/events" },
@@ -91,7 +90,6 @@ const roleMenus: Record<Role, MenuItem[]> = {
 
   [ROLES.STUDENT]: [
     { name: "Overview", icon: LayoutDashboard, path: "/dashboard/student" },
-    { name: "Attendance", icon: ClipboardList, path: "/dashboard/student/attendance" },
     { name: "Subjects", icon: BookOpen, path: "/dashboard/student/subjects" },
     { name: "Timetable", icon: Calendar, path: "/dashboard/student/timetable" },
     { name: "Events", icon: Calendar, path: "/dashboard/student/events" },

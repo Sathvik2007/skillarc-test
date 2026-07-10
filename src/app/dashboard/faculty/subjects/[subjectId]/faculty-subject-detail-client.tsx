@@ -32,7 +32,8 @@ import {
   AlertTriangle,
   User,
   Paperclip,
-  Video
+  Video,
+  Save
 } from "lucide-react"
 
 import {
@@ -46,6 +47,10 @@ import {
   endMeetingAction
 } from "@/app/actions/meetings"
 import { supabase } from "@/lib/supabase"
+import {
+  getExistingAttendanceAction,
+  saveAttendanceAction
+} from "@/app/dashboard/faculty/attendance/actions"
 
 interface FacultySubjectDetailClientProps {
   facultyId: string
@@ -77,7 +82,7 @@ export function FacultySubjectDetailClient({
   students,
   meetings,
 }: FacultySubjectDetailClientProps) {
-  const [activeTab, setActiveTab] = useState<"announcements" | "classwork" | "grades" | "students" | "meetings">("classwork")
+  const [activeTab, setActiveTab] = useState<"announcements" | "classwork" | "grades" | "students" | "meetings" | "attendance">("classwork")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [modalType, setModalType] = useState<"Assignment" | "Quiz" | "Coding Assignment" | "Material">("Assignment")
   const [editingAssignment, setEditingAssignment] = useState<any | null>(null)
@@ -98,6 +103,109 @@ export function FacultySubjectDetailClient({
   const [meetType, setMeetType] = useState<"instant" | "scheduled">("instant")
   const [meetStart, setMeetStart] = useState("")
   const [meetEnd, setMeetEnd] = useState("")
+
+  // Attendance specific states
+  const [selectedSection, setSelectedSection] = useState(sections[0]?.id || "")
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10))
+  const [selectedPeriod, setSelectedPeriod] = useState("")
+  const [attendance, setAttendance] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null)
+
+  useEffect(() => {
+    const hour = new Date().getHours()
+    const inferredPeriod = hour < 10 ? "1" : hour < 12 ? "2" : hour < 14 ? "3" : hour < 16 ? "4" : "5"
+    setSelectedPeriod(inferredPeriod)
+  }, [])
+
+  const filteredStudents = React.useMemo(() => {
+    return students.filter(student => student.section_id === selectedSection)
+  }, [students, selectedSection])
+
+  const markedCount = Object.keys(attendance).length
+  const totalStudents = filteredStudents.length
+  const completionPercent = totalStudents ? Math.round((markedCount / totalStudents) * 100) : 0
+  const presentCount = Object.values(attendance).filter((value) => value === "Present").length
+  const absentCount = Object.values(attendance).filter((value) => value === "Absent").length
+  const lateCount = Object.values(attendance).filter((value) => value === "Late").length
+
+  useEffect(() => {
+    let isActive = true
+
+    async function loadExistingSession() {
+      if (!selectedSection || !selectedDate || !selectedPeriod) {
+        if (isActive) {
+          setAttendance({})
+          setSessionNotice(null)
+        }
+        return
+      }
+
+      const periodValue = parseInt(selectedPeriod, 10)
+      if (isNaN(periodValue)) return
+
+      const result = await getExistingAttendanceAction({
+        subjectId: subject.id,
+        sectionId: selectedSection,
+        attendanceDate: selectedDate,
+        period: periodValue,
+      })
+
+      if (!isActive) return
+
+      if (result.success && result.exists) {
+        setAttendance(result.records ?? {})
+        setSessionNotice("Existing attendance found for this session. You can edit and save it again.")
+      } else {
+        setAttendance({})
+        setSessionNotice(null)
+      }
+    }
+
+    loadExistingSession()
+
+    return () => {
+      isActive = false
+    }
+  }, [selectedDate, selectedPeriod, selectedSection, subject.id])
+
+  const handleStatusChange = (studentId: string, status: string) => {
+    setAttendance((prev) => ({
+      ...prev,
+      [studentId]: status,
+    }))
+  }
+
+  const handleMarkAllPresent = () => {
+    const newAttendance: Record<string, string> = {}
+    filteredStudents.forEach((student) => {
+      newAttendance[student.id] = "Present"
+    })
+    setAttendance(newAttendance)
+  }
+
+  const handleSaveAttendance = async () => {
+    if (!selectedSection || !selectedDate || !selectedPeriod) {
+      triggerToast("Please set section, date, and period.", "warning")
+      return
+    }
+    setIsSaving(true)
+    const periodValue = parseInt(selectedPeriod, 10)
+    const result = await saveAttendanceAction({
+      subjectId: subject.id,
+      sectionId: selectedSection,
+      attendanceDate: selectedDate,
+      period: periodValue,
+      records: attendance,
+    })
+    setIsSaving(false)
+    if (result.success) {
+      triggerToast("Attendance saved successfully!", "success")
+      setSessionNotice("Existing attendance found for this session. You can edit and save it again.")
+    } else {
+      triggerToast(result.error || "Failed to save attendance.", "warning")
+    }
+  }
 
   useEffect(() => {
     setLocalMeetings(meetings)
@@ -367,6 +475,7 @@ export function FacultySubjectDetailClient({
               { id: "meetings", label: "Video Classroom", icon: Video },
               { id: "announcements", label: "Stream & Announcements", icon: MessageSquare },
               { id: "students", label: "Student Roster", icon: Users },
+              { id: "attendance", label: "Attendance", icon: ClipboardList },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -1053,6 +1162,176 @@ export function FacultySubjectDetailClient({
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 6: Attendance */}
+        {activeTab === "attendance" && (
+          <div className="space-y-6 text-left">
+            {sessionNotice && (
+              <div className="rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4 text-xs font-semibold text-indigo-700 flex items-center gap-2">
+                <AlertCircle size={16} />
+                {sessionNotice}
+              </div>
+            )}
+
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+              {/* Header with Title, stats and inline filter dropdowns */}
+              <div className="p-6 border-b bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-extrabold text-slate-800 text-sm flex items-center gap-2">
+                    <ClipboardList className="text-indigo-600" size={18} /> Mark Course Attendance
+                  </h3>
+                  {filteredStudents.length > 0 && (
+                    <p className="text-[11px] font-semibold text-slate-500 mt-1 font-sans">
+                      {markedCount} of {totalStudents} marked ({completionPercent}%) • {presentCount} Present • {absentCount} Absent • {lateCount} Late
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Section Select */}
+                  <div>
+                    <select
+                      value={selectedSection}
+                      onChange={(e) => {
+                        setSelectedSection(e.target.value)
+                        setAttendance({})
+                      }}
+                      className="border border-slate-200 focus:ring-2 focus:ring-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 bg-white outline-none cursor-pointer"
+                    >
+                      {sections.map((sec) => (
+                        <option key={sec.id} value={sec.id}>
+                          Section {sec.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Date Input */}
+                  <div>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="border border-slate-200 focus:ring-2 focus:ring-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-850 outline-none"
+                    />
+                  </div>
+
+                  {/* Period Select */}
+                  <div>
+                    <select
+                      value={selectedPeriod}
+                      onChange={(e) => setSelectedPeriod(e.target.value)}
+                      className="border border-slate-200 focus:ring-2 focus:ring-indigo-500 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-800 bg-white outline-none cursor-pointer"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8].map((p) => (
+                        <option key={p} value={String(p)}>
+                          Period {p}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions Row */}
+              {filteredStudents.length > 0 && (
+                <div className="px-6 py-3 bg-slate-50/30 border-b border-slate-100 flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Quick Actions</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleMarkAllPresent}
+                      className="px-3 py-1 bg-indigo-50 hover:bg-indigo-100 border border-indigo-150 text-indigo-700 text-[10px] font-extrabold rounded-lg transition-all"
+                    >
+                      Mark All Present
+                    </button>
+                    <button
+                      onClick={() => setAttendance({})}
+                      className="px-3 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-650 text-[10px] font-extrabold rounded-lg transition-all"
+                    >
+                      Reset Marking
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Table of Students Roster */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase bg-slate-50/50">
+                      <th className="px-6 py-3">Student Name</th>
+                      <th className="px-6 py-3">University Email</th>
+                      <th className="px-6 py-3">Registration Number</th>
+                      <th className="px-6 py-3 text-right">Attendance Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredStudents.map((student) => {
+                      const currentStatus = attendance[student.id]
+                      return (
+                        <tr key={student.id} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 font-bold text-xs flex items-center justify-center">
+                                {student.name.substring(0, 2).toUpperCase()}
+                              </div>
+                              <span className="font-bold text-slate-800 text-xs">{student.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-xs font-semibold text-slate-500 font-mono">{student.email}</td>
+                          <td className="px-6 py-4 text-xs font-bold text-slate-500">{student.registration_number || "—"}</td>
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {[
+                                { value: "Present", color: "bg-emerald-500", activeStyle: "bg-emerald-500 text-white border-emerald-500 ring-2 ring-emerald-200 ring-offset-1" },
+                                { value: "Absent", color: "bg-rose-500", activeStyle: "bg-rose-500 text-white border-rose-500 ring-2 ring-rose-200 ring-offset-1" },
+                                { value: "Late", color: "bg-amber-500", activeStyle: "bg-amber-500 text-white border-amber-500 ring-2 ring-amber-200 ring-offset-1" },
+                              ].map((s) => (
+                                <button
+                                  key={s.value}
+                                  onClick={() => handleStatusChange(student.id, s.value)}
+                                  className={`rounded-xl px-4 py-1.5 text-xs font-extrabold transition-all border ${
+                                    currentStatus === s.value
+                                      ? s.activeStyle
+                                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  {s.value}
+                                </button>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+
+                    {filteredStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="px-6 py-16 text-center text-slate-400 text-xs font-bold">
+                          No students enrolled in Section {sections.find(s => s.id === selectedSection)?.name || ""}.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Save Bar */}
+              {filteredStudents.length > 0 && (
+                <div className="border-t border-slate-200 px-6 py-4 flex justify-end bg-slate-50/50">
+                  <button
+                    onClick={handleSaveAttendance}
+                    disabled={isSaving}
+                    className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-sm"
+                  >
+                    {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={14} />}
+                    Save Attendance
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

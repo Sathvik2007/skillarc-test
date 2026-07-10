@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
+import { createSupabaseAdminClient } from "@/lib/supabase-admin"
 
 export async function POST(request: NextRequest) {
   try {
@@ -32,7 +33,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const adminClient = createSupabaseAdminClient()
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password: password || Math.random().toString(36).slice(-12),
       email_confirm: true,
@@ -40,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     if (authError) throw authError
 
-    const { data: parent, error } = await supabase
+    const { data: parent, error } = await adminClient
       .from("users")
       .insert([
         {

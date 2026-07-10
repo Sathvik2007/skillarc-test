@@ -77,7 +77,7 @@ export default async function FacultySubjectDetailPage({ params }: PageProps) {
   const { data: students = [] } = sectionIds.length
     ? await supabase
         .from("users")
-        .select("id, name, email, section_id")
+        .select("id, name, email, section_id, registration_number")
         .eq("role", ROLES.STUDENT)
         .in("section_id", sectionIds)
         .order("name")

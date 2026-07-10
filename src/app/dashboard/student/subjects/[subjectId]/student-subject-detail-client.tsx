@@ -22,7 +22,8 @@ import {
   ChevronRight,
   UserRound,
   Video,
-  Play
+  Play,
+  ClipboardList
 } from "lucide-react"
 import { supabase } from "@/lib/supabase"
 
@@ -40,6 +41,14 @@ interface StudentSubjectDetailClientProps {
   submissions: Array<any>
   classmates: Array<any>
   meetings: Array<any>
+  attendanceEntries: Array<any>
+  attendanceSummary: {
+    total: number
+    present: number
+    absent: number
+    late: number
+    rate: number
+  }
 }
 
 export function StudentSubjectDetailClient({
@@ -52,8 +61,10 @@ export function StudentSubjectDetailClient({
   submissions,
   classmates,
   meetings,
+  attendanceEntries,
+  attendanceSummary,
 }: StudentSubjectDetailClientProps) {
-  const [activeTab, setActiveTab] = useState<"stream" | "classwork" | "people" | "meetings">("classwork")
+  const [activeTab, setActiveTab] = useState<"stream" | "classwork" | "people" | "meetings" | "attendance">("classwork")
 
   // Real-time meetings state for active classroom classes
   const [localMeetings, setLocalMeetings] = useState<any[]>(meetings)
@@ -166,6 +177,7 @@ export function StudentSubjectDetailClient({
               { id: "meetings", label: "Video Classroom", icon: Video },
               { id: "stream", label: "Stream / Feed", icon: MessageSquare },
               { id: "people", label: "Class Roster", icon: Users },
+              { id: "attendance", label: "Attendance", icon: ClipboardList },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -419,6 +431,102 @@ export function StudentSubjectDetailClient({
                   No virtual lecture schedules are posted for your section yet.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 5: Attendance */}
+        {activeTab === "attendance" && (
+          <div className="space-y-6 text-left">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              {/* Summary Cards */}
+              <div className="bg-gradient-to-br from-teal-500 to-teal-600 rounded-3xl p-6 text-white shadow-sm flex flex-col justify-between min-h-[140px]">
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-teal-100">Attendance Rate</span>
+                <div>
+                  <h3 className="text-3xl font-black">{attendanceSummary.rate}%</h3>
+                  <p className="text-[11px] font-sans mt-1 text-teal-100">Overall attendance status</p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Present Sessions</span>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-800">{attendanceSummary.present}</h3>
+                  <p className="text-[11px] text-slate-400 font-sans mt-1">Marked present or late</p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Absent Sessions</span>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-800">{attendanceSummary.absent}</h3>
+                  <p className="text-[11px] text-slate-400 font-sans mt-1">Missed lecture hours</p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[140px]">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Total Sessions</span>
+                <div>
+                  <h3 className="text-3xl font-black text-slate-800">{attendanceSummary.total}</h3>
+                  <p className="text-[11px] text-slate-400 font-sans mt-1">Conducted session count</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Attendance History */}
+            <div className="bg-white border border-slate-200 rounded-3xl shadow-sm overflow-hidden">
+              <div className="p-6 border-b bg-slate-50 flex items-center justify-between">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                  <ClipboardList size={18} className="text-teal-600" /> Attendance History
+                </h3>
+                <span className="text-xs font-semibold bg-teal-50 border border-teal-100 text-teal-700 px-3 py-1 rounded-full">
+                  {attendanceEntries.length} Periods Logged
+                </span>
+              </div>
+
+              <div className="divide-y divide-slate-100">
+                {attendanceEntries.map((entry) => {
+                  const statusStyles: Record<string, string> = {
+                    PRESENT: "bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1 rounded-xl text-xs font-bold",
+                    ABSENT: "bg-red-50 border border-red-200 text-red-700 px-3 py-1 rounded-xl text-xs font-bold",
+                    LATE: "bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1 rounded-xl text-xs font-bold",
+                    NOT_MARKED: "bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-xl text-xs font-bold",
+                  }
+                  const statusLabels: Record<string, string> = {
+                    PRESENT: "Present",
+                    ABSENT: "Absent",
+                    LATE: "Late",
+                    NOT_MARKED: "Not Marked",
+                  }
+                  return (
+                    <div key={entry.id} className="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-4 hover:bg-slate-50/50 transition-colors">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-slate-700">Period {entry.period}</span>
+                          <span className="text-xs text-slate-300">•</span>
+                          <span className="text-xs font-semibold text-slate-500">{new Date(entry.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 font-semibold font-sans">
+                          Marked by: {entry.facultyName}
+                        </p>
+                      </div>
+
+                      <div>
+                        <span className={statusStyles[entry.status] || "bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-xl text-xs font-bold"}>
+                          {statusLabels[entry.status] || entry.status}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {attendanceEntries.length === 0 && (
+                  <div className="text-center py-16 text-slate-450 text-xs">
+                    <ClipboardList className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                    No attendance logs have been recorded for your section yet.
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}
