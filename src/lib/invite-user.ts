@@ -66,7 +66,15 @@ export async function inviteUser(params: {
 }) {
   const { email, role, institutionId, organizationId, origin: passedOrigin } = params
   const supabase = createSupabaseAdminClient()
-  const origin = passedOrigin || resolveAppOrigin()
+  
+  let origin = passedOrigin
+  if (!origin) {
+    try {
+      origin = await getRequestAppOrigin()
+    } catch {
+      origin = resolveAppOrigin()
+    }
+  }
   const redirectTo = `${origin}/auth/callback`
 
   const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers()

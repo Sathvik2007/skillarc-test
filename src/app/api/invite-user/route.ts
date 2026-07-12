@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const origin = resolveAppOrigin()
+    const origin = resolveAppOrigin(req.headers)
     const result = await inviteUser({
       email,
       role,

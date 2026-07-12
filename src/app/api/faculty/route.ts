@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
-import { inviteUser } from "@/lib/invite-user"
+import { inviteUser, resolveAppOrigin } from "@/lib/invite-user"
 
 export async function POST(request: NextRequest) {
   try {
@@ -35,12 +35,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Steps 1 & 2: createUser() block removed.
-    // Step 3: delegate auth + user creation to the shared invite API
+    const origin = resolveAppOrigin(request.headers)
     await inviteUser({
       email,
       role: ROLES.FACULTY,
       institutionId: institution_id,
       organizationId: profile.organization_id,
+      origin,
     })
 
     // Patch in the extra faculty fields (name, department) that invite-user doesn't set

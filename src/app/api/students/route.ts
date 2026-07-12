@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { NextRequest, NextResponse } from "next/server"
 import { ROLES } from "@/constants/roles"
-import { inviteUser } from "@/lib/invite-user"
+import { inviteUser, resolveAppOrigin } from "@/lib/invite-user"
 
 const STUDENT_SELECT = `
   *,
@@ -82,11 +82,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
+    const origin = resolveAppOrigin(request.headers)
     await inviteUser({
       email,
       role: ROLES.STUDENT,
       institutionId: institution_id,
       organizationId: profile.organization_id,
+      origin,
     })
 
     const { data: invitedUser, error: invitedUserError } = await supabase
