@@ -37,11 +37,17 @@ export async function middleware(request: NextRequest) {
     pathname === "/auth/callback" ||
     pathname === "/auth/set-password"
 
+  const isAuthFormRoute =
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/auth/login" ||
+    pathname === "/auth/signup"
+
   if (!user && !isAuthRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url))
   }
 
-  if (user && isAuthRoute) {
+  if (user && isAuthFormRoute) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
