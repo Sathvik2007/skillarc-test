@@ -11,15 +11,30 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     async function handleAuth() {
       try {
-        setStatus("Processing invite callback...")
+        setStatus("Verifying invite link...")
 
-        const { error: initializeError } = await supabase.auth.initialize()
-        if (initializeError) {
-          console.warn("⚠️ Auth initialize returned an error:", initializeError)
+        const {
+          data: { session: urlSession },
+          error: urlError,
+        } = await supabase.auth.getSessionFromUrl()
+
+        if (urlError) {
+          console.warn("⚠️ No session created from invite callback via URL:", urlError)
         }
 
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session) {
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession()
+
+        const activeSession = urlSession ?? session
+
+        if (sessionError) {
+          console.warn("⚠️ Session lookup error:", sessionError)
+        }
+
+        if (!activeSession) {
+          console.warn("⚠️ No active session after invite callback")
           setStatus("Setting up your account...")
           router.replace("/auth/set-password")
           return
