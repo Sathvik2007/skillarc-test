@@ -33,7 +33,9 @@ import {
   User,
   Paperclip,
   Video,
-  Save
+  Save,
+  Brain,
+  BookOpen
 } from "lucide-react"
 
 import {
@@ -434,93 +436,102 @@ export function FacultySubjectDetailClient({
   }
 
   const typeConfig = {
-    'Assignment': { icon: FileText, color: 'text-green-600', bg: 'bg-green-100', border: 'border-green-200', label: 'Assignment' },
-    'Quiz': { icon: CheckCircle, color: 'text-purple-600', bg: 'bg-purple-100', border: 'border-purple-200', label: 'Quiz' },
-    'Coding Assignment': { icon: FileCode, color: 'text-blue-600', bg: 'bg-blue-100', border: 'border-blue-200', label: 'Coding' },
-    'Material': { icon: Book, color: 'text-amber-600', bg: 'bg-amber-100', border: 'border-amber-200', label: 'Material' },
+    'Assignment': { icon: FileText, color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]/5', border: 'border-[#6C63FF]/15', label: 'Assignment' },
+    'Quiz': { icon: Brain, color: 'text-[#8B5CF6]', bg: 'bg-[#8B5CF6]/5', border: 'border-[#8B5CF6]/15', label: 'Quiz' },
+    'Coding Assignment': { icon: FileCode, color: 'text-[#38bdf8]', bg: 'bg-[#38bdf8]/5', border: 'border-[#38bdf8]/15', label: 'Coding' },
+    'Material': { icon: BookOpen, color: 'text-[#00C2A8]', bg: 'bg-[#00C2A8]/5', border: 'border-[#00C2A8]/15', label: 'Material' },
   } as any
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Top Banner */}
-      <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 px-8 py-10 relative overflow-hidden shadow-lg">
-        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
-        <div className="relative z-10 max-w-6xl mx-auto flex items-center justify-between">
-          <div>
-            <Link href="/dashboard/faculty/subjects" className="text-white/80 hover:text-white flex items-center gap-1 text-sm font-semibold mb-3 transition-colors">
-              <ArrowLeft size={16} /> Back to assigned subjects
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Top Banner (Bright, airy layout) */}
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        {/* Soft radial aura */}
+        <div className="absolute right-0 top-0 w-80 h-80 bg-radial-gradient from-indigo-50/50 to-transparent rounded-full -mr-16 -mt-16 pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-3">
+            <Link href="/dashboard/faculty/subjects" className="text-xs font-bold text-[#6C63FF] hover:text-[#5C53EF] flex items-center gap-1 transition-colors">
+              <ArrowLeft size={14} /> Back to assigned subjects
             </Link>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">{subject.name}</h1>
-            <p className="text-indigo-100 font-medium mt-1">
-              Code: {subject.code} • Teaching Sections: {sections.map(s => s.name).join(", ") || "None"}
-            </p>
+            <h1 className="text-3xl font-semibold text-slate-900 font-['Plus_Jakarta_Sans']">{subject.name}</h1>
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-500 font-semibold mt-1">
+              <span className="bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-md font-['Space_Grotesk'] text-[11px] font-bold text-slate-600">{subject.code}</span>
+              <span>•</span>
+              <span>Teaching Sections: {sections.map(s => s.name).join(", ") || "None"}</span>
+            </div>
           </div>
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl px-5 py-3 border border-white/20 text-white flex items-center gap-3">
-            <Users size={20} className="text-indigo-200" />
+          <div className="bg-slate-50 border border-slate-150 rounded-2xl px-5 py-3 text-slate-850 flex items-center gap-4 self-start md:self-center">
+            <div className="w-10 h-10 rounded-xl bg-[#6C63FF]/5 flex items-center justify-center text-[#6C63FF]">
+              <Users size={20} />
+            </div>
             <div>
-              <div className="text-xl font-bold">{students.length}</div>
-              <div className="text-[10px] uppercase font-bold text-indigo-200">Total Enrolled</div>
+              <div className="text-lg font-bold font-['Space_Grotesk'] text-slate-900 leading-none">
+                {students.length}
+              </div>
+              <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400 mt-1">Total Enrolled</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs Menu */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-6xl mx-auto px-8 flex justify-between items-center">
-          <nav className="flex space-x-8">
-            {[
-              { id: "classwork", label: "Classwork / Materials", icon: ListTodo },
-              { id: "grades", label: "Evaluation & Grades", icon: Award },
-              { id: "meetings", label: "Video Classroom", icon: Video },
-              { id: "announcements", label: "Stream & Announcements", icon: MessageSquare },
-              { id: "students", label: "Student Roster", icon: Users },
-              { id: "attendance", label: "Attendance", icon: ClipboardList },
-            ].map((tab) => (
+      {/* Tabs Menu with premium pill buttons */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex-1 bg-white/80 border border-slate-100 rounded-2xl p-1.5 shadow-[0_2px_8px_rgba(15,23,42,0.01)] backdrop-blur-md flex flex-wrap gap-1">
+          {[
+            { id: "classwork", label: "Classwork", icon: ListTodo },
+            { id: "grades", label: "Evaluation", icon: Award },
+            { id: "meetings", label: "Video Classroom", icon: Video },
+            { id: "announcements", label: "Stream", icon: MessageSquare },
+            { id: "students", label: "Roster", icon: Users },
+            { id: "attendance", label: "Attendance", icon: ClipboardList },
+          ].map((tab) => {
+            const active = activeTab === tab.id
+            return (
               <button
                 key={tab.id}
                 onClick={() => {
                   setActiveTab(tab.id as any)
                   setSelectedGradingAssignment(null)
                 }}
-                className={`flex items-center py-4 px-1 border-b-2 font-semibold text-sm transition-all ${
-                  activeTab === tab.id
-                    ? "border-indigo-600 text-indigo-600"
-                    : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                className={`flex-1 min-w-[100px] flex items-center justify-center py-2.5 px-3 rounded-xl font-bold text-xs transition-all duration-200 active:scale-95 ${
+                  active
+                    ? "bg-[#6C63FF] text-white shadow-md shadow-indigo-100"
+                    : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                 }`}
               >
-                <tab.icon className={`w-4 h-4 mr-2 ${activeTab === tab.id ? "text-indigo-600" : "text-slate-400"}`} />
+                <tab.icon className={`w-3.5 h-3.5 mr-2 ${active ? "text-white" : "text-slate-400"}`} />
                 {tab.label}
               </button>
-            ))}
-          </nav>
-          {activeTab === "classwork" && (
-            <div className="relative group">
-              <button className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm">
-                <Plus size={14} className="mr-1.5" /> Create Coursework
-              </button>
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-30 py-1 overflow-hidden">
-                {(["Assignment", "Quiz", "Coding Assignment", "Material"] as const).map(type => (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      setModalType(type)
-                      setEditingAssignment(null)
-                      setIsModalOpen(true)
-                    }}
-                    className="w-full text-left px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors"
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+            )
+          })}
         </div>
+
+        {activeTab === "classwork" && (
+          <div className="relative group self-start md:self-center">
+            <button className="flex items-center justify-center gap-1.5 bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] hover:from-[#5C53EF] hover:to-[#7B4CE6] text-white text-xs font-bold px-5 py-3 rounded-2xl shadow-sm hover:shadow-md hover:shadow-indigo-100 transition-all duration-200 active:scale-95">
+              <Plus size={14} /> Create Coursework
+            </button>
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-30 py-1.5 overflow-hidden">
+              {(["Assignment", "Quiz", "Coding Assignment", "Material"] as const).map(type => (
+                <button
+                  key={type}
+                  onClick={() => {
+                    setModalType(type)
+                    setEditingAssignment(null)
+                    setIsModalOpen(true)
+                  }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50/50 hover:text-[#6C63FF] transition-colors"
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Body */}
-      <div className="flex-1 max-w-6xl w-full mx-auto p-8">
+      <div className="w-full">
         
         {/* Tab 1: Classwork */}
         {activeTab === "classwork" && (
@@ -2156,8 +2167,8 @@ function CreateWorksheetModal({
 }
 
 const typeConfig = {
-  'Assignment': { icon: FileText, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', activeBg: 'bg-emerald-600', label: 'Assignment' },
-  'Quiz': { icon: CheckCircle, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-200', activeBg: 'bg-purple-600', label: 'Quiz' },
-  'Coding Assignment': { icon: FileCode, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', activeBg: 'bg-blue-600', label: 'Coding' },
-  'Material': { icon: Book, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', activeBg: 'bg-amber-600', label: 'Material' },
+  'Assignment': { icon: FileText, color: 'text-[#6C63FF]', bg: 'bg-[#6C63FF]/5', border: 'border-[#6C63FF]/15', activeBg: 'bg-[#6C63FF]', label: 'Assignment' },
+  'Quiz': { icon: Brain, color: 'text-[#8B5CF6]', bg: 'bg-[#8B5CF6]/5', border: 'border-[#8B5CF6]/15', activeBg: 'bg-[#8B5CF6]', label: 'Quiz' },
+  'Coding Assignment': { icon: FileCode, color: 'text-[#38bdf8]', bg: 'bg-[#38bdf8]/5', border: 'border-[#38bdf8]/15', activeBg: 'bg-[#38bdf8]', label: 'Coding' },
+  'Material': { icon: BookOpen, color: 'text-[#00C2A8]', bg: 'bg-[#00C2A8]/5', border: 'border-[#00C2A8]/15', activeBg: 'bg-[#00C2A8]', label: 'Material' },
 } as any

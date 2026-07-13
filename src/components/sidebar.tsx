@@ -223,7 +223,7 @@ export default function Sidebar() {
       <button
         type="button"
         onClick={handleLogout}
-        className="mt-5 flex w-full items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+        className="mt-5 flex w-full cursor-pointer items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
       >
         <LogOut className="h-4 w-4" />
         Log out

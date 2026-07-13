@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { Plus } from "lucide-react"
+import { BookOpenCheck, Plus } from "lucide-react"
 
 import { ProgramList } from "@/components/programs/program-list"
 import { CreateProgramDialog } from "@/components/programs/create-program-dialog"
@@ -216,27 +216,34 @@ export function ProgramsClientPage({
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">
-            Programs
-          </h1>
-
-          <p className="text-gray-600 mt-1">
-            Manage academic programs
-          </p>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex flex-col gap-5 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-[#6C63FF]">
+            <BookOpenCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#6C63FF]">Academic Planning</p>
+            <div className="mt-1 flex items-center gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">Programs</h1>
+              <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-[#6C63FF]">
+                {programs.length} Active
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">Create and manage academic programs with better structure and visibility.</p>
+          </div>
         </div>
 
         <Button
           onClick={() => handleOpenDialog()}
+          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] px-5 py-3 text-sm font-semibold text-white shadow-sm hover:shadow-md"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-4 w-4" />
           New Program
         </Button>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 shadow-sm">
         <ProgramList
           programs={programs}
           isLoading={isLoading}

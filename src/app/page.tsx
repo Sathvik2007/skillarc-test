@@ -25,13 +25,13 @@ export default function Home() {
               <div className="flex flex-wrap gap-4">
                 <button
                   onClick={() => router.push("/signup")}
-                  className="inline-flex items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700"
                 >
                   Get started
                 </button>
                 <button
                   onClick={() => router.push("/auth/login")}
-                  className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300"
+                  className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-slate-300"
                 >
                   Sign in
                 </button>

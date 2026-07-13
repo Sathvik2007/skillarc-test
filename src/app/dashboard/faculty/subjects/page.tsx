@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation"
-import { BookOpen, GraduationCap, Layers } from "lucide-react"
+import { BookOpen, GraduationCap, Layers, ArrowRight } from "lucide-react"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { ROLES } from "@/constants/roles"
 import Link from "next/link"
@@ -98,49 +98,63 @@ export default async function FacultySubjectsPage() {
   })
 
   return (
-    <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "space-between", alignItems: "center" }}>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      {/* Header section identical to Attendance Center design */}
+      <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row md:items-end md:justify-between">
         <div>
-          <p style={{ margin: 0, color: "#4f46e5", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", fontSize: 12 }}>
-            Teaching portfolio
-          </p>
-          <h1 style={{ margin: "4px 0 0", fontSize: 28, fontWeight: 700, color: "#111827" }}>
-            Your assigned subjects
-          </h1>
-          <p style={{ margin: "6px 0 0", color: "#6b7280", maxWidth: 620 }}>
-            A quick overview of the courses you are teaching and the sections that are tied to them.
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#6C63FF]">Academic Portfolio</p>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-900 font-['Plus_Jakarta_Sans']">Your Assigned Subjects</h1>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
+            Overview of the courses you teach and the sections assigned to your schedule.
           </p>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 999, background: "#f5f3ff", color: "#6d28d9", fontWeight: 600 }}>
-          <BookOpen size={18} />
-          {subjects.length} subject{subjects.length === 1 ? "" : "s"}
+        <div className="rounded-2xl border border-indigo-100 bg-indigo-50 px-4 py-3 self-start md:self-auto">
+          <p className="text-sm text-indigo-700">Teaching load</p>
+          <p className="text-lg font-semibold text-indigo-900 font-['Space_Grotesk']">
+            {subjects.length} active subject{subjects.length === 1 ? "" : "s"}
+          </p>
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+      {/* Main Subjects Display list */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {subjects.map((subject) => (
           <Link
             key={subject.id}
             href={`/dashboard/faculty/subjects/${subject.id}`}
-            style={{ textDecoration: "none", display: "block" }}
+            className="group block relative bg-white rounded-3xl border border-slate-100 shadow-[0_2px_8px_rgba(15,23,42,0.02)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(108,99,255,0.06)] hover:border-indigo-100"
           >
-            <div style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 18, boxShadow: "0 10px 25px rgba(79,70,229,0.06)", height: "100%", boxSizing: "border-box", transition: "transform 0.2s, box-shadow 0.2s" }} className="hover:scale-[1.02] hover:shadow-lg">
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-                <div style={{ width: 38, height: 38, borderRadius: 12, background: "linear-gradient(135deg, #4f46e5, #7c3aed)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff" }}>
-                  <GraduationCap size={18} />
+            {/* Type tag line */}
+            <div className="h-[4px] w-full bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6]" />
+            
+            <div className="p-6 flex flex-col justify-between h-full min-h-[170px]">
+              <div>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center text-[#6C63FF]">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-bold font-['Space_Grotesk'] text-[#6C63FF] bg-[#6C63FF]/5 border border-[#6C63FF]/15 px-2 py-0.5 rounded-md">
+                    {subject.code}
+                  </span>
                 </div>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "#4f46e5", background: "#eef2ff", borderRadius: 999, padding: "4px 8px" }}>
-                  {subject.code}
-                </span>
+
+                <h3 className="text-base font-bold text-slate-900 tracking-tight group-hover:text-[#6C63FF] transition-colors duration-200">
+                  {subject.name}
+                </h3>
               </div>
-              <h3 style={{ margin: "0 0 6px", fontSize: 18, fontWeight: 700, color: "#111827" }}>{subject.name}</h3>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 10 }}>
-                <Layers size={15} />
-                <span>{subject.sectionName}</span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#6b7280", marginTop: 8 }}>
-                <GraduationCap size={15} />
-                <span>{subject.programName}</span>
+
+              <div className="mt-6 space-y-2 border-t border-slate-50 pt-4">
+                <div className="flex items-center gap-2.5 text-xs text-slate-500">
+                  <Layers className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <span className="truncate">{subject.sectionName}</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs text-slate-500 justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <GraduationCap className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="truncate font-['Space_Grotesk'] font-medium">{subject.programName}</span>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#6C63FF] group-hover:translate-x-1 transition-all duration-200" />
+                </div>
               </div>
             </div>
           </Link>
@@ -148,11 +162,14 @@ export default async function FacultySubjectsPage() {
       </div>
 
       {subjects.length === 0 && (
-        <div style={{ background: "#fff", border: "1px solid #ece7ff", borderRadius: 18, padding: 28, textAlign: "center", color: "#6b7280" }}>
-          No subjects are currently assigned to you. Contact your institution admin if this looks incorrect.
+        <div className="py-20 px-6 border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/50 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-indigo-50 flex items-center justify-center text-[#6C63FF] mx-auto mb-4">
+            <BookOpen className="w-6 h-6" />
+          </div>
+          <p className="text-sm font-bold text-slate-900 mb-1">No subjects assigned</p>
+          <p className="text-xs text-slate-400">There are no subjects linked to your teaching roster yet.</p>
         </div>
       )}
     </div>
   )
 }
-

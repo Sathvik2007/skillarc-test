@@ -127,7 +127,7 @@ export function StudentList({
                   key={student.id}
                   onClick={() => onEdit?.(student)}
                   className={`
-                    cursor-pointer transition-colors
+                    !border-0 cursor-pointer transition-colors
                     ${isChecked
                       ? "bg-violet-50"
                       : index % 2 === 0 ? "bg-white" : "bg-muted/20"
@@ -218,7 +218,7 @@ export function StudentList({
       </div>
 
       {/* Pagination footer */}
-      <div className="flex items-center justify-between border-t px-6 py-4 text-sm text-muted-foreground">
+      <div className="flex items-center justify-between px-6 py-4 text-sm text-muted-foreground">
 
         <span>
           {totalCount === 0

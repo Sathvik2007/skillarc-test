@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Users, Power, Play, RefreshCw } from "lucide-react"
+import { Users, Power, Play } from "lucide-react"
 
 interface BreakoutRoomsProps {
   onToast: (msg: string, type: "info" | "success" | "warning" | "error") => void
@@ -33,7 +33,7 @@ export default function BreakoutRooms({ onToast, onClose }: BreakoutRoomsProps) 
         <button
           onClick={onClose}
           type="button"
-          className="text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all"
+          className="cursor-pointer text-xs bg-white/10 hover:bg-white/20 px-2.5 py-1.5 rounded-lg transition-all"
         >
           Close
         </button>

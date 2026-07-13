@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useRef, useState, useEffect } from "react"
-import { Trash2, Download, Circle, Eraser, Square, Pencil } from "lucide-react"
+import { Trash2, Download, Eraser, Pencil } from "lucide-react"
 
 interface WhiteboardProps {
   onToast: (msg: string, type: "info" | "success" | "warning" | "error") => void
@@ -182,21 +182,21 @@ export default function Whiteboard({ onToast, onClose }: WhiteboardProps) {
         <div className="flex items-center gap-2">
           <button
             onClick={clearCanvas}
-            className="p-1.5 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/30 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
+            className="cursor-pointer p-1.5 bg-white/5 border border-white/10 hover:bg-red-500/20 hover:border-red-500/30 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
           >
             <Trash2 size={13} />
             Clear Board
           </button>
           <button
             onClick={downloadImage}
-            className="p-1.5 bg-indigo-600 border border-indigo-500 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
+            className="cursor-pointer p-1.5 bg-indigo-600 border border-indigo-500 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold flex items-center gap-1 transition-all"
           >
             <Download size={13} />
             Save PNG
           </button>
           <button
             onClick={onClose}
-            className="p-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
+            className="cursor-pointer p-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-lg transition-all"
           >
             Close
           </button>

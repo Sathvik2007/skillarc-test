@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import type { FacultyWithStats } from "@/modules/faculty/types/faculty.types"
-import { Trash2, Edit2, BookOpen, Users } from "lucide-react"
+import { Trash2, Edit2, BookOpen, Users, GraduationCap } from "lucide-react"
 
 interface FacultyListProps {
   faculty: FacultyWithStats[]
@@ -36,55 +36,69 @@ export function FacultyList({
 
   if (!faculty || faculty.length === 0) {
     return (
-      <div className="flex items-center justify-center h-48 text-gray-500">
+      <div className="flex h-48 items-center justify-center rounded-2xl bg-slate-50 text-sm text-slate-500">
         <p>No faculty found. Create one to get started.</p>
       </div>
     )
   }
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-2xl">
       <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Department</TableHead>
-            <TableHead className="text-center">
+        <TableHeader className="!border-0">
+          <TableRow className="!border-0 bg-slate-50">
+            <TableHead className="px-4 py-3">Faculty</TableHead>
+            <TableHead className="px-4 py-3">Email</TableHead>
+            <TableHead className="px-4 py-3">Department</TableHead>
+            <TableHead className="px-4 py-3 text-center">
               <div className="flex items-center justify-center gap-1">
                 <BookOpen className="h-4 w-4" />
                 Subjects
               </div>
             </TableHead>
-            <TableHead className="text-center">
+            <TableHead className="px-4 py-3 text-center">
               <div className="flex items-center justify-center gap-1">
                 <Users className="h-4 w-4" />
                 Sections
               </div>
             </TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="px-4 py-3 text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {faculty.map((f) => (
-            <TableRow key={f.id} className="hover:bg-gray-50">
-              <TableCell className="font-medium">{f.name}</TableCell>
-              <TableCell className="text-gray-600">{f.email}</TableCell>
-              <TableCell className="text-gray-600">
+            <TableRow key={f.id} className="hover:bg-slate-50/70">
+              <TableCell className="px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-[#6C63FF]">
+                    <GraduationCap className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{f.name}</p>
+                    <p className="text-xs text-slate-500">Faculty member</p>
+                  </div>
+                </div>
+              </TableCell>
+              <TableCell className="px-4 py-3 text-sm text-slate-600">{f.email}</TableCell>
+              <TableCell className="px-4 py-3 text-sm text-slate-600">
                 {f.department?.name || "Not Assigned"}
               </TableCell>
-              <TableCell className="text-center">
-                <Badge variant="outline">{f.assignedSubjects || 0}</Badge>
+              <TableCell className="px-4 py-3 text-center">
+                <Badge variant="outline" className="bg-white text-slate-700">
+                  {f.assignedSubjects || 0}
+                </Badge>
               </TableCell>
-              <TableCell className="text-center">
-                <Badge variant="outline">{f.assignedSections || 0}</Badge>
+              <TableCell className="px-4 py-3 text-center">
+                <Badge variant="outline" className="bg-white text-slate-700">
+                  {f.assignedSections || 0}
+                </Badge>
               </TableCell>
-              <TableCell className="text-right space-x-2">
+              <TableCell className="px-4 py-3 text-right space-x-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit?.(f)}
-                  className="h-8 w-8 p-0"
+                  className="h-8 w-8 p-0 rounded-xl hover:bg-slate-100"
                 >
                   <Edit2 className="h-4 w-4" />
                 </Button>
@@ -92,7 +106,7 @@ export function FacultyList({
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete?.(f.id)}
-                  className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                  className="h-8 w-8 p-0 rounded-xl text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

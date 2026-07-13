@@ -3,8 +3,10 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Users, Plus, Upload } from "lucide-react"
 import { FacultyList } from "@/components/faculty/faculty-list"
 import { CreateFacultyDialog } from "@/components/faculty/create-faculty-dialog"
+import { BulkImportDialog } from "@/components/import/bulk-import-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import type { FacultyWithStats, CreateFacultyInput, UpdateFacultyInput } from "@/modules/faculty/types/faculty.types"
 
@@ -21,6 +23,7 @@ export function FacultyClientPage({
 }: FacultyClientPageProps) {
   const [faculty, setFaculty] = useState<FacultyWithStats[]>(initialFaculty)
   const [isOpen, setIsOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [selectedFaculty, setSelectedFaculty] = useState<FacultyWithStats | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -111,18 +114,36 @@ export function FacultyClientPage({
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Faculty</h1>
-          <p className="text-gray-600 mt-1">Manage faculty accounts and department assignments.</p>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex flex-col gap-5 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-[#6C63FF]">
+            <Users className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#6C63FF]">Faculty Management</p>
+            <div className="mt-1 flex items-center gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">Faculty</h1>
+              <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-[#6C63FF]">
+                {faculty.length} Listed
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">Track faculty members, departments, and teaching assignments.</p>
+          </div>
         </div>
-        <Button onClick={() => setIsOpen(true)}>
-          Add Faculty
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={() => setIsOpen(true)} className="rounded-2xl bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Faculty
+          </Button>
+        </div>
       </div>
 
-      <Card className="p-6">
+      <Card className="p-6 shadow-sm">
         <FacultyList
           faculty={faculty}
           isLoading={isLoading}
@@ -144,6 +165,14 @@ export function FacultyClientPage({
         faculty={selectedFaculty}
         departments={departments}
         isLoading={isLoading}
+      />
+
+      <BulkImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entity="faculty"
+        institutionId={institutionId}
+        onImported={() => loadFaculty()}
       />
     </div>
   )

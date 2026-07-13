@@ -3,12 +3,14 @@
 import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { GraduationCap, Plus, Upload } from "lucide-react"
 import { StudentList } from "@/components/students/student-list"
 import { CreateStudentDialog } from "@/components/students/create-student-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import StudentSearch from "@/modules/students/components/StudentSearch"
 import StudentFilters from "@/modules/students/components/StudentFilters"
 import StudentDrawer from "@/modules/students/components/StudentDrawer"
+import { BulkImportDialog } from "@/components/import/bulk-import-dialog"
 import type { StudentWithSection, CreateStudentInput, UpdateStudentInput } from "@/modules/students"
 
 const ROWS_OPTIONS = [10, 25, 50, 100] as const
@@ -39,6 +41,7 @@ export function StudentsClientPage({
   const [selectedSection, setSelectedSection] = useState("")
 
   const [isOpen, setIsOpen]           = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [selectedStudent, setSelectedStudent] = useState<StudentWithSection | null>(null)
   const [drawerOpen, setDrawerOpen]   = useState(false)
   const [isLoading, setIsLoading]     = useState(false)
@@ -159,13 +162,33 @@ export function StudentsClientPage({
 
   // ── Render ──────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Students</h1>
-          <p className="text-gray-600 mt-1">Manage student accounts and section assignments.</p>
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="flex flex-col gap-5 rounded-3xl bg-white p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-[#6C63FF]">
+            <GraduationCap className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#6C63FF]">Student Operations</p>
+            <div className="mt-1 flex items-center gap-3">
+              <h1 className="text-3xl font-semibold text-slate-900">Students</h1>
+              <span className="rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-bold text-[#6C63FF]">
+                {totalCount} Records
+              </span>
+            </div>
+            <p className="mt-2 text-sm text-slate-500">Manage enrollments, section assignments, and student records in one place.</p>
+          </div>
         </div>
-        <Button onClick={() => setIsOpen(true)}>New Student</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => setIsImportOpen(true)} className="rounded-2xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+            <Upload className="mr-2 h-4 w-4" />
+            Import CSV
+          </Button>
+          <Button onClick={() => setIsOpen(true)} className="rounded-2xl bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:shadow-md">
+            <Plus className="mr-2 h-4 w-4" />
+            New Student
+          </Button>
+        </div>
       </div>
 
       <StudentSearch value={search} onChange={(v) => { setSearch(v); setPage(1) }} />
@@ -214,6 +237,14 @@ export function StudentsClientPage({
         sections={sections}
         programs={programs}
         isLoading={isLoading}
+      />
+
+      <BulkImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entity="students"
+        institutionId={institutionId}
+        onImported={() => loadStudents(page, limit)}
       />
 
       <StudentDrawer

@@ -81,24 +81,26 @@ export default function StudentPage({
   ]
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-6 sm:px-6 lg:px-8">
-      <div className="rounded-[28px] border border-slate-200/80 bg-white/90 p-6 shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 pb-8 pt-6 sm:px-6 lg:px-8 space-y-6">
+      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm relative overflow-hidden">
+        {/* Soft radial aura */}
+        <div className="absolute right-0 top-0 w-80 h-80 bg-radial-gradient from-indigo-50/50 to-transparent rounded-full -mr-16 -mt-16 pointer-events-none" />
+        <div className="relative z-10 flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-200/30">
+            <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-gradient-to-br from-[#6C63FF] to-[#8B5CF6] text-white shadow-lg shadow-indigo-100/50 flex-shrink-0">
               <GraduationCap size={24} />
             </div>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-indigo-600">Student dashboard</p>
-              <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-slate-950">Welcome back, {student.name}</h1>
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#6C63FF]">Student dashboard</p>
+              <h1 className="mt-2 text-3xl font-semibold text-slate-900 font-['Plus_Jakarta_Sans']">Welcome back, {student.name}</h1>
               <p className="mt-2 text-sm text-slate-500">{student.institution} · {student.programName} · Semester {student.semester ?? "—"}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link href="/dashboard/student/todo" className="inline-flex items-center gap-2 rounded-full border border-indigo-200 bg-indigo-50 px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-100">
+            <Link href="/dashboard/student/todo" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:border-slate-200 active:scale-95">
               📋 To-Do List
             </Link>
-            <Link href="/dashboard/student/report-card" className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100">
+            <Link href="/dashboard/student/report-card" className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:border-slate-200 active:scale-95">
               🏆 Report Card
             </Link>
           </div>
@@ -107,25 +109,25 @@ export default function StudentPage({
 
       <div className="grid gap-4 xl:grid-cols-4">
         {stats.map((item) => (
-          <div key={item.label} className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm transition hover:-translate-y-0.5">
-            <div className={`inline-flex h-12 w-12 items-center justify-center rounded-3xl ${item.accent}`}>
+          <div key={item.label} className="rounded-3xl border border-slate-100 bg-white p-5 shadow-[0_2px_8px_rgba(15,23,42,0.015)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(108,99,255,0.06)] hover:border-indigo-100/80">
+            <div className={`inline-flex h-10 w-10 items-center justify-center rounded-2xl ${item.accent} border border-slate-100/10`}>
               {item.icon}
             </div>
-            <p className="mt-4 text-2xl font-bold text-slate-950">{item.value}</p>
-            <p className="mt-1 text-sm font-semibold text-slate-700">{item.label}</p>
-            <p className="mt-2 text-sm text-slate-500">{item.sublabel}</p>
+            <p className="mt-4 text-2xl font-bold font-['Space_Grotesk'] text-slate-900 leading-none">{item.value}</p>
+            <p className="mt-2 text-[10px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
+            <p className="mt-1 text-xs text-slate-500 font-semibold">{item.sublabel}</p>
           </div>
         ))}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <section className="rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+        <section className="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-[0_2px_8px_rgba(15,23,42,0.015)]">
           <div className="flex items-center justify-between gap-4 pb-4">
             <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Today’s classes</p>
-              <h2 className="mt-3 text-xl font-semibold text-slate-950">Your schedule</h2>
+              <p className="text-[11px] font-bold uppercase tracking-wider text-[#6C63FF]">Today’s classes</p>
+              <h2 className="text-2xl font-black font-['Plus_Jakarta_Sans'] tracking-tight text-slate-900 mt-1">Your schedule</h2>
             </div>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-slate-600">Live</span>
+            <span className="bg-[#6C63FF]/5 border border-[#6C63FF]/15 text-[#6C63FF] text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md">Live</span>
           </div>
           <div className="space-y-4">
             {schedule.length === 0 ? (
@@ -148,27 +150,27 @@ export default function StudentPage({
           </div>
         </section>
 
-        <aside className="space-y-6 rounded-[28px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.06)]">
+        <aside className="space-y-6 bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-[0_2px_8px_rgba(15,23,42,0.015)]">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-500">Attendance</p>
-            <h2 className="mt-3 text-xl font-semibold text-slate-950">Session summary</h2>
+            <p className="text-[11px] font-bold uppercase tracking-wider text-[#6C63FF]">Attendance</p>
+            <h2 className="text-2xl font-black font-['Plus_Jakarta_Sans'] tracking-tight text-slate-900 mt-1">Session summary</h2>
           </div>
           <div className="grid gap-3">
-            <div className="rounded-3xl bg-emerald-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700">Present</p>
-              <p className="mt-3 text-3xl font-bold text-emerald-900">{attendance.present}</p>
+            <div className="rounded-3xl bg-[#00C2A8]/5 border border-[#00C2A8]/15 p-4">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#00C2A8]">Present</p>
+              <p className="mt-2 text-3xl font-bold font-['Space_Grotesk'] text-[#00C2A8]">{attendance.present}</p>
             </div>
-            <div className="rounded-3xl bg-rose-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-700">Absent</p>
-              <p className="mt-3 text-3xl font-bold text-rose-900">{attendance.absent}</p>
+            <div className="rounded-3xl bg-[#F04438]/5 border border-[#F04438]/15 p-4">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#F04438]">Absent</p>
+              <p className="mt-2 text-3xl font-bold font-['Space_Grotesk'] text-[#F04438]">{attendance.absent}</p>
             </div>
-            <div className="rounded-3xl bg-sky-50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-sky-700">Late</p>
-              <p className="mt-3 text-3xl font-bold text-sky-900">{attendance.late}</p>
+            <div className="rounded-3xl bg-[#FFB020]/5 border border-[#FFB020]/15 p-4">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#FFB020]">Late</p>
+              <p className="mt-2 text-3xl font-bold font-['Space_Grotesk'] text-[#FFB020]">{attendance.late}</p>
             </div>
           </div>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm font-semibold text-slate-900">Student details</p>
+          <div className="rounded-3xl border border-slate-100 bg-slate-50/50 p-5">
+            <p className="text-xs font-bold text-slate-800">Student details</p>
             <div className="mt-4 grid gap-3">
               {[
                 ["Email", student.email],
@@ -176,9 +178,9 @@ export default function StudentPage({
                 ["Phone", student.phone],
                 ["Admission year", student.admissionYear ?? "—"],
               ].map(([label, value]) => (
-                <div key={label} className="rounded-3xl bg-white p-4">
-                  <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{label}</p>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">{value || "—"}</p>
+                <div key={label} className="rounded-2xl border border-slate-100/60 bg-white p-4 shadow-[0_2px_8px_rgba(15,23,42,0.01)]">
+                  <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
+                  <p className="mt-1 text-xs font-bold text-slate-800">{value || "—"}</p>
                 </div>
               ))}
             </div>

@@ -2,28 +2,26 @@
 
 import { Trash2, BookMarked, GraduationCap, BookOpen, Target, Edit2, Building2, Layers } from "lucide-react"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
-const typeConfig: Record<string, { label: string; icon: string; color: string; bg: string; border: string }> = {
-  THEORY:   { label: "Theory",   icon: "📖", color: "#1d4ed8", bg: "#eff6ff", border: "#bfdbfe" },
-  LAB:      { label: "Lab",      icon: "🧪", color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
-  ELECTIVE: { label: "Elective", icon: "🎯", color: "#9333ea", bg: "#fdf4ff", border: "#e9d5ff" },
+const typeConfig: Record<string, { label: string; icon: string; textClass: string; bgClass: string; gradientClass: string }> = {
+  THEORY:   { label: "Theory",   icon: "📖", textClass: "text-[#6C63FF]", bgClass: "bg-[#6C63FF]/8", gradientClass: "from-[#6C63FF] to-[#8B5CF6]" },
+  LAB:      { label: "Lab",      icon: "🧪", textClass: "text-[#00C2A8]", bgClass: "bg-[#00C2A8]/8", gradientClass: "from-[#00C2A8] to-[#00DDAA]" },
+  ELECTIVE: { label: "Elective", icon: "🎯", textClass: "text-[#FFB020]", bgClass: "bg-[#FFB020]/8", gradientClass: "from-[#FFB020] to-[#FFC550]" },
 }
 
-function getProgramColor(name: string | undefined): { color: string; bg: string; border: string } {
-  if (!name) return { color: "#6b7280", bg: "#f3f4f6", border: "#e5e7eb" }
+function getProgramStyle(name: string | undefined): { text: string; bg: string } {
+  if (!name) return { text: "text-slate-500", bg: "bg-slate-50" }
   const n = name.toLowerCase()
-  if (n.includes("cse") || n.includes("computer"))   return { color: "#1d4ed8", bg: "#eff6ff", border: "#bfdbfe" }
-  if (n.includes("ai") || n.includes("artificial"))  return { color: "#9333ea", bg: "#fdf4ff", border: "#e9d5ff" }
-  if (n.includes("ece") || n.includes("electronic")) return { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" }
-  if (n.includes("mba") || n.includes("business"))   return { color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" }
-  if (n.includes("mech"))                            return { color: "#a16207", bg: "#fefce8", border: "#fef08a" }
-  if (n.includes("civil"))                           return { color: "#0f766e", bg: "#f0fdfa", border: "#99f6e4" }
+  if (n.includes("cse") || n.includes("computer"))   return { text: "text-[#6C63FF]", bg: "bg-[#6C63FF]/5" }
+  if (n.includes("ai") || n.includes("artificial"))  return { text: "text-[#8B5CF6]", bg: "bg-[#8B5CF6]/5" }
+  if (n.includes("ece") || n.includes("electronic")) return { text: "text-[#00C2A8]", bg: "bg-[#00C2A8]/5" }
+  if (n.includes("mba") || n.includes("business"))   return { text: "text-amber-700", bg: "bg-amber-50/70" }
+  if (n.includes("mech"))                            return { text: "text-yellow-800", bg: "bg-yellow-50/80" }
+  if (n.includes("civil"))                           return { text: "text-teal-700", bg: "bg-teal-50/80" }
+  
   const palette = [
-    { color: "#1d4ed8", bg: "#eff6ff", border: "#bfdbfe" },
-    { color: "#9333ea", bg: "#fdf4ff", border: "#e9d5ff" },
-    { color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
-    { color: "#c2410c", bg: "#fff7ed", border: "#fed7aa" },
+    { text: "text-[#6C63FF]", bg: "bg-[#6C63FF]/5" },
+    { text: "text-[#8B5CF6]", bg: "bg-[#8B5CF6]/5" },
+    { text: "text-[#00C2A8]", bg: "bg-[#00C2A8]/5" },
   ]
   const hash = [...name].reduce((acc, c) => acc + c.charCodeAt(0), 0)
   return palette[hash % palette.length]
@@ -32,208 +30,135 @@ function getProgramColor(name: string | undefined): { color: string; bg: string;
 export function SubjectsList({ subjects, onDelete, onEdit }: any) {
   if (!subjects?.length) {
     return (
-      <div style={{
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        padding: "64px 24px", border: "1.5px dashed #e5e7eb", borderRadius: 20,
-        backgroundColor: "#fafafa", fontFamily: font,
-      }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: 16,
-          background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-          display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16,
-        }}>
-          <BookMarked size={24} color="#fff" />
+      <div className="flex flex-col items-center justify-center py-20 px-6 rounded-3xl bg-slate-50/50">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#6C63FF] to-[#8B5CF6] flex items-center justify-center shadow-lg shadow-indigo-100 mb-5">
+          <BookMarked className="w-6 h-6 text-white" />
         </div>
-        <p style={{ fontSize: 15, fontWeight: 700, color: "#111827", marginBottom: 4 }}>No subjects yet</p>
-        <p style={{ fontSize: 13, color: "#9ca3af" }}>Create a subject to get started</p>
+        <p className="text-base font-bold text-slate-900 mb-1">No subjects yet</p>
+        <p className="text-sm text-slate-400">Create a subject to get started</p>
       </div>
     )
   }
 
   return (
-    <div style={{
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fill, minmax(290px, 1fr))",
-      gap: 16,
-      fontFamily: font,
-    }}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
       {subjects.map((subject: any) => {
         const type = typeConfig[subject.subject_type] ?? typeConfig.THEORY
-        const progColor = getProgramColor(subject.program?.name)
+        const progStyle = getProgramStyle(subject.program?.name)
 
         return (
           <div
             key={subject.id}
-            style={{
-              backgroundColor: "#fff", borderRadius: 16,
-              border: "1px solid #f3f4f6",
-              boxShadow: "0 1px 4px rgba(0,0,0,0.05)",
-              overflow: "hidden", transition: "box-shadow 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              ;(e.currentTarget as HTMLDivElement).style.boxShadow = "0 4px 16px rgba(0,0,0,0.10)"
-              ;(e.currentTarget as HTMLDivElement).style.borderColor = "#e0e7ff"
-            }}
-            onMouseLeave={e => {
-              ;(e.currentTarget as HTMLDivElement).style.boxShadow = "0 1px 4px rgba(0,0,0,0.05)"
-              ;(e.currentTarget as HTMLDivElement).style.borderColor = "#f3f4f6"
-            }}
+            className="group relative bg-white rounded-3xl shadow-[0_2px_8px_rgba(15,23,42,0.02)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(108,99,255,0.06)] flex flex-col justify-between"
           >
-            {/* Top accent bar */}
-            <div style={{ height: 4, background: `linear-gradient(90deg, ${type.color}, ${type.color}55)` }} />
+            {/* Top color tag */}
+            <div className={`h-[5px] w-full bg-gradient-to-r ${type.gradientClass}`} />
 
-            <div style={{ padding: "18px 20px 0" }}>
-
-              {/* Header */}
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                <div style={{
-                  width: 42, height: 42, borderRadius: 12, flexShrink: 0,
-                  backgroundColor: type.bg, border: `1px solid ${type.border}`,
-                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20,
-                }}>
+            <div className="p-6">
+              {/* Header section */}
+              <div className="flex gap-4 items-start mb-5">
+                <div className={`w-11 h-11 rounded-xl flex-shrink-0 flex items-center justify-center text-xl ${type.bgClass}`}>
                   {type.icon}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <h3 style={{
-                    fontSize: 15, fontWeight: 800, color: "#111827",
-                    letterSpacing: "-0.01em", overflow: "hidden",
-                    textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
+                <div className="min-w-0">
+                  <h3 className="text-base font-bold text-slate-900 tracking-tight overflow-hidden text-ellipsis whitespace-nowrap group-hover:text-[#6C63FF] transition-colors duration-200">
                     {subject.name}
                   </h3>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, color: "#6b7280",
-                      backgroundColor: "#f3f4f6", padding: "2px 7px", borderRadius: 20, letterSpacing: "0.05em",
-                    }}>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="text-[10px] font-bold font-['Space_Grotesk'] text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
                       {subject.code}
                     </span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700,
-                      color: type.color, backgroundColor: type.bg,
-                      border: `1px solid ${type.border}`,
-                      padding: "2px 7px", borderRadius: 20, letterSpacing: "0.04em",
-                    }}>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${type.bgClass} ${type.textClass}`}>
                       {type.label}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Info rows */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 16 }}>
-
-                {/* Department */}
+              {/* Subject Details metadata */}
+              <div className="space-y-3">
+                {/* Department Info */}
                 {subject.program?.department?.name && (
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 10,
-                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <Building2 size={13} color="#6b7280" style={{ flexShrink: 0 }} />
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Department</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div className="flex items-center gap-3 bg-slate-50/50 rounded-xl p-3">
+                    <Building2 className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Department</p>
+                      <p className="text-xs font-semibold text-slate-700 truncate mt-0.5">
                         {subject.program.department.name}
                       </p>
                     </div>
                   </div>
                 )}
 
-                {/* Program */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 10,
-                  backgroundColor: progColor.bg, border: `1px solid ${progColor.border}`,
-                  borderRadius: 10, padding: "9px 12px",
-                }}>
-                  <GraduationCap size={13} color={progColor.color} style={{ flexShrink: 0 }} />
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: progColor.color, opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.05em" }}>Program</p>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: progColor.color, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {/* Program Info */}
+                <div className={`flex items-center gap-3 rounded-xl p-3 ${progStyle.bg}`}>
+                  <GraduationCap className={`w-4 h-4 flex-shrink-0 ${progStyle.text}`} />
+                  <div className="min-w-0">
+                    <p className={`text-[9px] font-bold uppercase tracking-wider opacity-85 ${progStyle.text}`}>Program</p>
+                    <p className={`text-xs font-bold truncate mt-0.5 ${progStyle.text}`}>
                       {subject.program?.name ?? "Not Assigned"}
                     </p>
                   </div>
                 </div>
 
-                {/* Semester + Credits */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <BookOpen size={13} color="#6b7280" style={{ flexShrink: 0 }} />
+                {/* Semester & Credits Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex items-center gap-3 bg-slate-50/50 rounded-xl p-3">
+                    <BookOpen className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <div>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Semester</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Semester</p>
+                      <p className="text-xs font-bold text-slate-700 mt-0.5 font-['Space_Grotesk']">
                         Semester {subject.semester}
                       </p>
                     </div>
                   </div>
-                  <div style={{
-                    display: "flex", alignItems: "center", gap: 8,
-                    backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                  }}>
-                    <Target size={13} color="#6b7280" style={{ flexShrink: 0 }} />
+
+                  <div className="flex items-center gap-3 bg-slate-50/50 rounded-xl p-3">
+                    <Target className="w-4 h-4 text-slate-400 flex-shrink-0" />
                     <div>
-                      <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Credits</p>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: "#111827" }}>{subject.credits} Credits</p>
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Credits</p>
+                      <p className="text-xs font-bold text-slate-700 mt-0.5 font-['Space_Grotesk']">
+                        {subject.credits} Credits
+                      </p>
                     </div>
                   </div>
                 </div>
 
-                {/* Credit dot bar */}
-                <div style={{
-                  display: "flex", alignItems: "center", gap: 8,
-                  backgroundColor: "#f8fafc", borderRadius: 10, padding: "9px 12px",
-                }}>
-                  <Layers size={13} color="#6b7280" style={{ flexShrink: 0 }} />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flex: 1 }}>
-                    <p style={{ fontSize: 10, fontWeight: 600, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.05em" }}>Credit weight</p>
-                    <div style={{ display: "flex", gap: 3 }}>
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} style={{
-                          width: 8, height: 8, borderRadius: "50%",
-                          backgroundColor: i < subject.credits ? "#6366f1" : "#e5e7eb",
-                        }} />
-                      ))}
-                    </div>
+                {/* Credits visual progress */}
+                <div className="flex items-center justify-between gap-3 bg-slate-50/50 rounded-xl p-3">
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Credit Weight</span>
+                  </div>
+                  <div className="flex gap-1">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                          i < subject.credits ? "bg-gradient-to-br from-[#6C63FF] to-[#8B5CF6] scale-110 shadow-sm" : "bg-slate-200"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
-
               </div>
             </div>
 
-            {/* Actions */}
-            <div style={{ display: "flex", borderTop: "1px solid #f3f4f6" }}>
+            {/* Actions Panel */}
+            <div className="flex items-center p-2 gap-2 bg-slate-50/30">
               <button
                 onClick={() => onEdit?.(subject)}
-                style={{
-                  flex: 1, padding: "11px 0",
-                  fontSize: 12, fontWeight: 600, color: "#374151",
-                  backgroundColor: "transparent", border: "none",
-                  borderRight: "1px solid #f3f4f6",
-                  cursor: "pointer", display: "flex", alignItems: "center",
-                  justifyContent: "center", gap: 6,
-                  transition: "background 0.15s", fontFamily: font,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#f8fafc")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-[#6C63FF] hover:bg-slate-100 flex items-center justify-center gap-2 transition-all duration-200 shadow-none hover:shadow-sm"
               >
-                <Edit2 size={13} color="#6b7280" /> Edit
+                <Edit2 className="w-3.5 h-3.5" />
+                Edit
               </button>
               <button
                 onClick={() => onDelete(subject.id)}
-                style={{
-                  flex: 1, padding: "11px 0",
-                  fontSize: 12, fontWeight: 600, color: "#ef4444",
-                  backgroundColor: "transparent", border: "none",
-                  cursor: "pointer", display: "flex", alignItems: "center",
-                  justifyContent: "center", gap: 6,
-                  transition: "background 0.15s", fontFamily: font,
-                }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#fff1f2")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
+                className="flex-1 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:text-[#F04438] hover:bg-red-50/50 flex items-center justify-center gap-2 transition-all duration-200"
               >
-                <Trash2 size={13} /> Delete
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete
               </button>
             </div>
           </div>

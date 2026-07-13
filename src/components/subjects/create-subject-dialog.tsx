@@ -4,19 +4,17 @@ import { useState, useMemo } from "react"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { X, BookMarked } from "lucide-react"
 
-const font = "'Plus Jakarta Sans', 'DM Sans', sans-serif"
-
 const subjectTypes = [
-  { value: "THEORY",   label: "Theory",   icon: "📖", color: "#1d4ed8", bg: "#eff6ff", border: "#bfdbfe" },
-  { value: "LAB",      label: "Lab",      icon: "🧪", color: "#15803d", bg: "#f0fdf4", border: "#bbf7d0" },
-  { value: "ELECTIVE", label: "Elective", icon: "🎯", color: "#9333ea", bg: "#fdf4ff", border: "#e9d5ff" },
+  { value: "THEORY",   label: "Theory",   icon: "📖", textClass: "text-[#6C63FF]", bgClass: "bg-[#6C63FF]/5", borderClass: "border-[#6C63FF]/20" },
+  { value: "LAB",      label: "Lab",      icon: "🧪", textClass: "text-[#00C2A8]", bgClass: "bg-[#00C2A8]/5", borderClass: "border-[#00C2A8]/20" },
+  { value: "ELECTIVE", label: "Elective", icon: "🎯", textClass: "text-[#FFB020]", bgClass: "bg-[#FFB020]/5", borderClass: "border-[#FFB020]/20" },
 ]
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontSize: 11, fontWeight: 700, color: "#374151", marginBottom: 6, letterSpacing: "0.03em", textTransform: "uppercase" }}>
+    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 block">
       {children}
-    </p>
+    </label>
   )
 }
 
@@ -27,25 +25,26 @@ function StyledSelect({ value, onChange, children, disabled }: {
   disabled?: boolean
 }) {
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      disabled={disabled}
-      style={{
-        width: "100%", padding: "9px 12px", fontSize: 13, fontWeight: 500,
-        border: "1px solid #e5e7eb", borderRadius: 10,
-        backgroundColor: disabled ? "#f3f4f6" : "#f9fafb",
-        color: disabled ? "#9ca3af" : "#111827",
-        outline: "none", fontFamily: font, cursor: disabled ? "not-allowed" : "pointer",
-        appearance: "none",
-        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "right 12px center",
-        paddingRight: 32,
-      }}
-    >
-      {children}
-    </select>
+    <div className="relative">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        disabled={disabled}
+        className={`w-full px-4 py-2.5 text-sm font-semibold border border-slate-100 rounded-2xl outline-none appearance-none cursor-pointer transition-all duration-200 ${
+          disabled 
+            ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+            : "bg-slate-50/50 text-slate-800 hover:border-slate-200 focus:border-[#6C63FF] focus:bg-white focus:ring-1 focus:ring-[#6C63FF]/20"
+        }`}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+          backgroundRepeat: "no-repeat",
+          backgroundPosition: "right 16px center",
+          paddingRight: "40px",
+        }}
+      >
+        {children}
+      </select>
+    </div>
   )
 }
 
@@ -60,14 +59,7 @@ function StyledInput({ value, onChange, placeholder }: {
       value={value}
       placeholder={placeholder}
       onChange={e => onChange(e.target.value)}
-      style={{
-        width: "100%", padding: "9px 12px", fontSize: 13, fontWeight: 500,
-        border: "1px solid #e5e7eb", borderRadius: 10,
-        backgroundColor: "#f9fafb", color: "#111827",
-        outline: "none", fontFamily: font, boxSizing: "border-box",
-      }}
-      onFocus={e => (e.currentTarget.style.borderColor = "#6366f1")}
-      onBlur={e => (e.currentTarget.style.borderColor = "#e5e7eb")}
+      className="w-full px-4 py-2.5 text-sm font-semibold border border-slate-100 rounded-2xl bg-slate-50/50 text-slate-800 placeholder-slate-400 outline-none hover:border-slate-200 focus:border-[#6C63FF] focus:bg-white focus:ring-1 focus:ring-[#6C63FF]/20 transition-all duration-200"
     />
   )
 }
@@ -113,7 +105,6 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
   async function handleSubmit() {
     if (!canSubmit) return
     setLoading(true)
-    // department_id is UI-only — not sent to API
     const { department_id, ...payload } = formData
     await onSubmit(payload)
     setFormData(defaultForm)
@@ -122,41 +113,28 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 overflow-hidden max-w-lg" style={{ borderRadius: 20, fontFamily: font }}>
-
+      <DialogContent className="p-0 overflow-hidden max-w-lg rounded-3xl border border-slate-100 bg-white/95 backdrop-blur-md shadow-2xl">
         {/* Header */}
-        <div style={{
-          padding: "20px 24px 16px", borderBottom: "1px solid #f3f4f6",
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              display: "flex", alignItems: "center", justifyContent: "center",
-            }}>
-              <BookMarked size={17} color="#fff" />
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#6C63FF] to-[#8B5CF6] flex items-center justify-center shadow-md shadow-indigo-100/50">
+              <BookMarked className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 style={{ fontSize: 15, fontWeight: 800, color: "#111827", letterSpacing: "-0.01em" }}>Create Subject</h2>
-              <p style={{ fontSize: 11, color: "#9ca3af", marginTop: 1 }}>Fill in the subject details below</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-tight font-['Plus_Jakarta_Sans']">Create Subject</h2>
+              <p className="text-xs text-slate-400 mt-0.5">Fill in the subject details below</p>
             </div>
           </div>
           <button
             onClick={() => onOpenChange(false)}
-            style={{
-              width: 30, height: 30, borderRadius: 8, border: "1px solid #f3f4f6",
-              backgroundColor: "#f9fafb", display: "flex", alignItems: "center",
-              justifyContent: "center", cursor: "pointer",
-            }}
+            className="w-8 h-8 rounded-xl border border-slate-100 bg-slate-50/50 flex items-center justify-center hover:bg-slate-100 transition-colors duration-200"
           >
-            <X size={14} color="#6b7280" />
+            <X className="w-4 h-4 text-slate-500" />
           </button>
         </div>
 
         {/* Body */}
-        <div style={{ padding: "20px 24px", display: "flex", flexDirection: "column", gap: 16, maxHeight: "70vh", overflowY: "auto" }}>
-
+        <div className="px-6 py-5 space-y-5 max-h-[65vh] overflow-y-auto">
           {/* Department */}
           <div>
             <FieldLabel>Department</FieldLabel>
@@ -168,7 +146,7 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
             </StyledSelect>
           </div>
 
-          {/* Program — filtered by department */}
+          {/* Program */}
           <div>
             <FieldLabel>Program</FieldLabel>
             <StyledSelect
@@ -207,7 +185,7 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
           </div>
 
           {/* Name + Code */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <FieldLabel>Subject Name</FieldLabel>
               <StyledInput value={formData.name} onChange={v => set("name", v)} placeholder="e.g. Data Structures" />
@@ -231,7 +209,7 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
           {/* Subject Type */}
           <div>
             <FieldLabel>Subject Type</FieldLabel>
-            <div style={{ display: "flex", gap: 8 }}>
+            <div className="flex gap-3">
               {subjectTypes.map(t => {
                 const active = formData.subject_type === t.value
                 return (
@@ -239,40 +217,27 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
                     key={t.value}
                     type="button"
                     onClick={() => set("subject_type", t.value)}
-                    style={{
-                      flex: 1, padding: "10px 8px", borderRadius: 12, cursor: "pointer",
-                      border: `1.5px solid ${active ? t.border : "#e5e7eb"}`,
-                      backgroundColor: active ? t.bg : "#f9fafb",
-                      display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-                      transition: "all 0.15s", fontFamily: font,
-                    }}
+                    className={`flex-1 py-3 px-2 rounded-2xl border flex flex-col items-center gap-1.5 transition-all duration-200 active:scale-95 ${
+                      active
+                        ? `border-[#6C63FF] ${t.bgClass} ${t.textClass} scale-[1.02] shadow-sm font-bold`
+                        : "border-slate-100 bg-slate-50/20 text-slate-500 hover:border-slate-200 font-semibold"
+                    }`}
                   >
-                    <span style={{ fontSize: 18 }}>{t.icon}</span>
-                    <span style={{ fontSize: 11, fontWeight: 700, color: active ? t.color : "#6b7280" }}>
-                      {t.label}
-                    </span>
+                    <span className="text-xl leading-none">{t.icon}</span>
+                    <span className="text-[11px] uppercase tracking-wider">{t.label}</span>
                   </button>
                 )
               })}
             </div>
           </div>
-
         </div>
 
         {/* Footer */}
-        <div style={{
-          padding: "14px 24px", borderTop: "1px solid #f3f4f6",
-          display: "flex", gap: 10,
-        }}>
+        <div className="flex items-center gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/30">
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            style={{
-              flex: 1, padding: "10px 0", fontSize: 13, fontWeight: 600,
-              color: "#374151", backgroundColor: "#f9fafb",
-              border: "1px solid #e5e7eb", borderRadius: 10,
-              cursor: "pointer", fontFamily: font,
-            }}
+            className="flex-1 py-2.5 text-xs font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-100 rounded-xl transition-all duration-200"
           >
             Cancel
           </button>
@@ -280,18 +245,11 @@ export function CreateSubjectDialog({ open, onOpenChange, onSubmit, departments,
             type="button"
             onClick={handleSubmit}
             disabled={!canSubmit || loading}
-            style={{
-              flex: 2, padding: "10px 0", fontSize: 13, fontWeight: 700, color: "#fff",
-              background: !canSubmit ? "#e5e7eb" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
-              border: "none", borderRadius: 10,
-              cursor: !canSubmit || loading ? "not-allowed" : "pointer",
-              fontFamily: font, opacity: loading ? 0.7 : 1,
-            }}
+            className="flex-[2] py-2.5 text-xs font-bold text-white bg-gradient-to-r from-[#6C63FF] to-[#8B5CF6] hover:from-[#5C53EF] hover:to-[#7B4CE6] rounded-xl shadow-sm hover:shadow-md hover:shadow-indigo-100/50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 active:scale-[0.98]"
           >
             {loading ? "Creating…" : "Create Subject"}
           </button>
         </div>
-
       </DialogContent>
     </Dialog>
   )

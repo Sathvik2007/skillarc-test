@@ -1,13 +1,27 @@
 -- =============================================================
--- SkillArc Database Schema v1.0
--- Date: 2026-06-12
+-- SkillArc Database Schema v2.0
+-- Date: 2026-07-12
+--
+-- This file reconciles the original v1.0 migration with the
+-- current live database state. Changes vs v1.0:
+--
+--   1. subjects        -> DROPPED faculty_id, section_id
+--                          (a subject can now be taught by multiple
+--                           faculty/sections; see faculty_subjects)
+--   2. faculty_subjects -> NEW join table: subject <-> faculty <-> section,
+--                          scoped by institution/semester/academic_year
+--   3. assignments      -> ADDED type, max_score, questions, language,
+--                          test_cases, section_ids, files
+--                          (supports quiz/coding assignment types,
+--                           not just file-upload assignments)
+--   4. submissions      -> ADDED quiz_answers, code_content, language, status
+--   5. applications     -> ADDED resume_url
 --
 -- Instructions:
--- 1. Create a new Supabase project.
+-- 1. Create a new Supabase project (or run against a fresh schema).
 -- 2. Open SQL Editor.
 -- 3. Run this file.
--- 4. Do not modify existing tables or columns.
--- 5. Discuss schema changes before implementation.
+-- 4. Do not modify existing tables or columns without discussion.
 -- =============================================================
 
 -- Enable UUID generation
@@ -103,11 +117,11 @@ CREATE TABLE public.users (
 );
 
 CREATE TABLE public.sections (
-  id                uuid NOT NULL DEFAULT uuid_generate_v4(),
-  name              text NOT NULL,
-  semester          integer NOT NULL,
-  program_id        uuid,
-  institution_id    uuid,
+  id                 uuid NOT NULL DEFAULT uuid_generate_v4(),
+  name               text NOT NULL,
+  semester           integer NOT NULL,
+  program_id         uuid,
+  institution_id     uuid,
   faculty_advisor_id uuid,
   CONSTRAINT sections_pkey PRIMARY KEY (id),
   CONSTRAINT sections_program_id_fkey
@@ -154,29 +168,50 @@ CREATE TABLE public.user_permissions (
 
 
 -- -------------------------------------------------------------
--- ACADEMIC: Subjects, Timetable, Periods
+-- ACADEMIC: Subjects, Faculty Assignments, Timetable, Periods
 -- -------------------------------------------------------------
 
+-- CHANGED in v2: faculty_id and section_id removed from subjects.
+-- A subject is now a catalog entry (per institution/program); who
+-- teaches it, to which section, in which semester/year lives in
+-- faculty_subjects below (many-to-many).
 CREATE TABLE public.subjects (
   id             uuid NOT NULL DEFAULT uuid_generate_v4(),
   institution_id uuid,
   name           text,
   code           text,
   semester       integer,
-  faculty_id     uuid,
-  section_id     uuid,
   program_id     uuid,
   credits        integer,
   subject_type   text CHECK (subject_type = ANY (ARRAY['THEORY','LAB','ELECTIVE'])),
   CONSTRAINT subjects_pkey PRIMARY KEY (id),
   CONSTRAINT subjects_institution_id_fkey
     FOREIGN KEY (institution_id) REFERENCES public.institutions(id),
-  CONSTRAINT subjects_teacher_id_fkey
-    FOREIGN KEY (faculty_id) REFERENCES public.users(id),
-  CONSTRAINT subjects_section_id_fkey
-    FOREIGN KEY (section_id) REFERENCES public.sections(id),
   CONSTRAINT subjects_program_id_fkey
     FOREIGN KEY (program_id) REFERENCES public.programs(id)
+);
+
+-- NEW in v2: replaces the old subjects.faculty_id / subjects.section_id
+-- columns with a proper join table so a subject can be taught by
+-- multiple faculty across multiple sections/semesters/years.
+CREATE TABLE public.faculty_subjects (
+  id              uuid NOT NULL DEFAULT gen_random_uuid(),
+  institution_id  uuid NOT NULL,
+  faculty_id      uuid NOT NULL,
+  subject_id      uuid NOT NULL,
+  section_id      uuid,
+  semester        integer,
+  academic_year   text,
+  created_at      timestamp with time zone DEFAULT now(),
+  CONSTRAINT faculty_subjects_pkey PRIMARY KEY (id),
+  CONSTRAINT faculty_subjects_institution_id_fkey
+    FOREIGN KEY (institution_id) REFERENCES public.institutions(id),
+  CONSTRAINT faculty_subjects_faculty_id_fkey
+    FOREIGN KEY (faculty_id) REFERENCES public.users(id),
+  CONSTRAINT faculty_subjects_subject_id_fkey
+    FOREIGN KEY (subject_id) REFERENCES public.subjects(id),
+  CONSTRAINT faculty_subjects_section_id_fkey
+    FOREIGN KEY (section_id) REFERENCES public.sections(id)
 );
 
 CREATE TABLE public.timetable_slots (
@@ -211,21 +246,6 @@ CREATE TABLE public.periods (
   CONSTRAINT periods_pkey PRIMARY KEY (id),
   CONSTRAINT periods_institution_id_fkey
     FOREIGN KEY (institution_id) REFERENCES public.institutions(id)
-);
-
-CREATE TABLE public.subject_allocations (
-  id         uuid NOT NULL DEFAULT uuid_generate_v4(),
-  subject_id uuid,
-  faculty_id uuid,
-  section_id uuid,
-  created_at timestamp DEFAULT now(),
-  CONSTRAINT subject_allocations_pkey PRIMARY KEY (id),
-  CONSTRAINT subject_allocations_subject_id_fkey
-    FOREIGN KEY (subject_id) REFERENCES public.subjects(id),
-  CONSTRAINT subject_allocations_faculty_id_fkey
-    FOREIGN KEY (faculty_id) REFERENCES public.users(id),
-  CONSTRAINT subject_allocations_section_id_fkey
-    FOREIGN KEY (section_id) REFERENCES public.sections(id)
 );
 
 
@@ -266,15 +286,24 @@ CREATE TABLE public.attendance_records (
 -- ASSIGNMENTS & SUBMISSIONS
 -- -------------------------------------------------------------
 
+-- CHANGED in v2: assignments now support multiple types
+-- (file-upload / quiz / coding), not just file uploads.
 CREATE TABLE public.assignments (
-  id          uuid NOT NULL DEFAULT gen_random_uuid(),
-  subject_id  uuid,
-  faculty_id  uuid,
-  title       text NOT NULL,
-  description text,
-  due_date    timestamp,
-  created_at  timestamp DEFAULT now(),
-  updated_at  timestamp DEFAULT now(),
+  id           uuid NOT NULL DEFAULT gen_random_uuid(),
+  subject_id   uuid,
+  faculty_id   uuid,
+  title        text NOT NULL,
+  description  text,
+  due_date     timestamp,
+  created_at   timestamp DEFAULT now(),
+  updated_at   timestamp DEFAULT now(),
+  type         text DEFAULT 'Assignment',   -- e.g. 'Assignment' | 'Quiz' | 'Coding'
+  max_score    numeric DEFAULT 100,
+  questions    jsonb,                       -- quiz question definitions
+  language     text,                        -- programming language for coding assignments
+  test_cases   jsonb,                       -- coding assignment test cases
+  section_ids  uuid[],                      -- sections this assignment is issued to
+  files        text[],                      -- attached reference file URLs
   CONSTRAINT assignments_pkey PRIMARY KEY (id),
   CONSTRAINT assignments_subject_id_fkey
     FOREIGN KEY (subject_id) REFERENCES public.subjects(id),
@@ -282,6 +311,8 @@ CREATE TABLE public.assignments (
     FOREIGN KEY (faculty_id) REFERENCES public.users(id)
 );
 
+-- CHANGED in v2: submissions now capture quiz answers and code
+-- submissions in addition to file uploads, plus a review status.
 CREATE TABLE public.submissions (
   id            uuid NOT NULL DEFAULT gen_random_uuid(),
   assignment_id uuid,
@@ -290,6 +321,10 @@ CREATE TABLE public.submissions (
   submitted_at  timestamp DEFAULT now(),
   grade         numeric,
   feedback      text,
+  quiz_answers  jsonb,                      -- student's quiz answers
+  code_content  text,                       -- submitted source code
+  language      text,                       -- language of submitted code
+  status        text DEFAULT 'pending',     -- e.g. 'pending' | 'graded' | 'late'
   CONSTRAINT submissions_pkey PRIMARY KEY (id),
   CONSTRAINT submissions_assignment_id_fkey
     FOREIGN KEY (assignment_id) REFERENCES public.assignments(id),
@@ -453,11 +488,13 @@ CREATE TABLE public.job_posts (
     FOREIGN KEY (company_id) REFERENCES public.companies(id)
 );
 
+-- CHANGED in v2: applications now store a resume file URL.
 CREATE TABLE public.applications (
   id          uuid NOT NULL DEFAULT gen_random_uuid(),
   job_post_id uuid,
   student_id  uuid,
   status      text DEFAULT 'APPLIED',
+  resume_url  text,
   CONSTRAINT applications_pkey PRIMARY KEY (id),
   CONSTRAINT applications_job_post_id_fkey
     FOREIGN KEY (job_post_id) REFERENCES public.job_posts(id),
@@ -506,39 +543,41 @@ CREATE TABLE public.audit_logs (
   CONSTRAINT audit_logs_user_id_fkey
     FOREIGN KEY (user_id) REFERENCES public.users(id)
 );
-create table public.leave_applications (
-  id uuid not null default gen_random_uuid (),
-  student_id uuid not null,
-  section_id uuid null,
-  advisor_id uuid null,
-  status text not null default 'PENDING'::text,
-  reason text null,
-  notes text null,
-  created_at timestamp without time zone null default now(),
-  updated_at timestamp without time zone null default now(),
-  institution_id uuid null,
-  from_date date not null,
-  to_date date not null,
-  approved_at timestamp without time zone null,
-  approved_by uuid null,
-  constraint leave_applications_pkey primary key (id),
-  constraint leave_applications_approved_by_fkey foreign KEY (approved_by) references users (id),
-  constraint leave_applications_institution_id_fkey foreign KEY (institution_id) references institutions (id),
-  constraint leave_applications_advisor_id_fkey foreign KEY (advisor_id) references users (id),
-  constraint leave_applications_section_id_fkey foreign KEY (section_id) references sections (id),
-  constraint leave_applications_student_id_fkey foreign KEY (student_id) references users (id),
-  constraint leave_applications_status_check check (
-    (
-      status = any (
-        array[
-          'PENDING'::text,
-          'APPROVED'::text,
-          'REJECTED'::text
-        ]
-      )
-    )
-  )
-) TABLESPACE pg_default;
+
+
+-- -------------------------------------------------------------
+-- LEAVE APPLICATIONS
+-- -------------------------------------------------------------
+
+CREATE TABLE public.leave_applications (
+  id             uuid NOT NULL DEFAULT gen_random_uuid(),
+  student_id     uuid NOT NULL,
+  section_id     uuid,
+  advisor_id     uuid,
+  status         text NOT NULL DEFAULT 'PENDING',
+  reason         text,
+  notes          text,
+  created_at     timestamp DEFAULT now(),
+  updated_at     timestamp DEFAULT now(),
+  institution_id uuid,
+  from_date      date NOT NULL,
+  to_date        date NOT NULL,
+  approved_at    timestamp,
+  approved_by    uuid,
+  CONSTRAINT leave_applications_pkey PRIMARY KEY (id),
+  CONSTRAINT leave_applications_approved_by_fkey
+    FOREIGN KEY (approved_by) REFERENCES public.users(id),
+  CONSTRAINT leave_applications_institution_id_fkey
+    FOREIGN KEY (institution_id) REFERENCES public.institutions(id),
+  CONSTRAINT leave_applications_advisor_id_fkey
+    FOREIGN KEY (advisor_id) REFERENCES public.users(id),
+  CONSTRAINT leave_applications_section_id_fkey
+    FOREIGN KEY (section_id) REFERENCES public.sections(id),
+  CONSTRAINT leave_applications_student_id_fkey
+    FOREIGN KEY (student_id) REFERENCES public.users(id),
+  CONSTRAINT leave_applications_status_check
+    CHECK (status = ANY (ARRAY['PENDING','APPROVED','REJECTED']))
+);
 
 
 -- ===========================================
@@ -588,7 +627,6 @@ CREATE TABLE public.meetings (
 );
 
 
-
 -- ===========================================
 -- MEETING PARTICIPANTS
 -- ===========================================
@@ -610,7 +648,6 @@ CREATE TABLE public.meeting_participants (
 
     UNIQUE(meeting_id, user_id)
 );
-
 
 
 -- ===========================================
@@ -639,10 +676,21 @@ CREATE TABLE public.meeting_messages (
 );
 
 
-
 -- ===========================================
 -- INDEXES
 -- ===========================================
+
+CREATE INDEX idx_faculty_subjects_faculty
+ON public.faculty_subjects(faculty_id);
+
+CREATE INDEX idx_faculty_subjects_subject
+ON public.faculty_subjects(subject_id);
+
+CREATE INDEX idx_faculty_subjects_section
+ON public.faculty_subjects(section_id);
+
+CREATE INDEX idx_faculty_subjects_institution
+ON public.faculty_subjects(institution_id);
 
 CREATE INDEX idx_meetings_faculty
 ON public.meetings(faculty_id);
@@ -666,7 +714,6 @@ CREATE INDEX idx_messages_meeting
 ON public.meeting_messages(meeting_id);
 
 
-
 -- ===========================================
 -- ENABLE RLS
 -- ===========================================
@@ -675,6 +722,9 @@ ALTER TABLE public.meetings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meeting_participants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.meeting_messages ENABLE ROW LEVEL SECURITY;
 
+-- NOTE: faculty_subjects has no RLS policy defined yet in the source
+-- dump this file was reconciled against — add one before relying on
+-- RLS for it in production.
 
 
 -- ===========================================
@@ -702,6 +752,7 @@ FOR ALL
 TO authenticated
 USING (true)
 WITH CHECK (true);
+
 -- =============================================================
---  END OF SCHEMA  (30 tables total)
+--  END OF SCHEMA  (31 tables total)
 -- =============================================================

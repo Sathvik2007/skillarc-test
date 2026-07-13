@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { facultySubjectService } from "@/modules/faculty-subjects/services/facultySubjectService"
 import SummaryPanel from "@/modules/faculty-subjects/components/SummaryPanel"
+import { BulkImportDialog } from "@/components/import/bulk-import-dialog"
 import { Search, Users, X, CheckCircle2, AlertCircle, Save, Loader2 } from "lucide-react"
 
 interface Faculty {
@@ -81,6 +82,7 @@ export function FacultySubjectsClientPage({
   const [savedSubjects, setSavedSubjects] = useState<string[]>([])
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<Toast>(null)
+  const [isImportOpen, setIsImportOpen] = useState(false)
 
   // Animation state
   const [subjectsVisible, setSubjectsVisible] = useState(false)
@@ -227,13 +229,21 @@ export function FacultySubjectsClientPage({
       )}
 
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
-            Faculty Assignment Center
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Select a faculty member, then choose the subjects they teach.
-          </p>
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+              Faculty Assignment Center
+            </h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Select a faculty member, then choose the subjects they teach.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+          >
+            Import CSV
+          </button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-[320px_1fr_300px] gap-6 items-start">

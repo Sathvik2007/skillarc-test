@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ParentList } from "@/components/parents/parent-list"
 import { CreateParentDialog } from "@/components/parents/create-parent-dialog"
+import { BulkImportDialog } from "@/components/import/bulk-import-dialog"
 import { useToast } from "@/components/ui/use-toast"
 import type { Parent, CreateParentInput, UpdateParentInput } from "@/modules/parents"
 
@@ -16,6 +17,7 @@ interface ParentsClientPageProps {
 export function ParentsClientPage({ initialParents, institutionId }: ParentsClientPageProps) {
   const [parents, setParents] = useState<Parent[]>(initialParents)
   const [isOpen, setIsOpen] = useState(false)
+  const [isImportOpen, setIsImportOpen] = useState(false)
   const [selectedParent, setSelectedParent] = useState<Parent | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const { toast } = useToast()
@@ -108,7 +110,10 @@ export function ParentsClientPage({ initialParents, institutionId }: ParentsClie
           <h1 className="text-3xl font-bold">Parents</h1>
           <p className="text-gray-600 mt-1">Manage parent accounts and assign parent access.</p>
         </div>
-        <Button onClick={() => setIsOpen(true)}>New Parent</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setIsImportOpen(true)}>Import CSV</Button>
+          <Button onClick={() => setIsOpen(true)}>New Parent</Button>
+        </div>
       </div>
 
       <Card className="p-6">
@@ -132,6 +137,14 @@ export function ParentsClientPage({ initialParents, institutionId }: ParentsClie
         onSubmit={handleCreateOrUpdate}
         parent={selectedParent}
         isLoading={isLoading}
+      />
+
+      <BulkImportDialog
+        open={isImportOpen}
+        onOpenChange={setIsImportOpen}
+        entity="parents"
+        institutionId={institutionId}
+        onImported={() => loadParents()}
       />
     </div>
   )

@@ -1,14 +1,10 @@
-import { Suspense } from "react"
 import { redirect } from "next/navigation"
 import { createSupabaseServerClient } from "@/lib/supabase-server"
 import { ROLES } from "@/constants/roles"
-import FacultyProfile from "./components/FacultyProfile"
-import FacultySubjects from "./components/FacultySubjects"
-import FacultyTimetable from "./components/FacultyTimetable"
 import FacultyDashboardClient from "./faculty-dashboard-client"
 
 export default async function FacultyDashboardPage() {
-  // Minimal role check — keep this quick and small so the page can stream other sections.
+  // Minimal role check — keep this quick and small so the page can load fast
   const supabase = await createSupabaseServerClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/auth/login")
@@ -21,8 +17,7 @@ export default async function FacultyDashboardPage() {
 
   if (profile?.role !== ROLES.FACULTY) redirect("/auth/login")
 
-  // Quick minimal fetch for immediate visibility in the client dashboard.
-  // Fetch detailed profile (including institution id) first, then run other small queries in parallel.
+  // Fetch detailed profile first, then run other small queries in parallel.
   const { data: profileInfo } = await supabase.from("users").select("name, role, institution_id").eq("id", user.id).single()
 
   const [{ data: institution }, { data: assignedSubjects }, { data: timetableRows }, { count: studentCount }] = await Promise.all([
@@ -44,8 +39,7 @@ export default async function FacultyDashboardPage() {
   }))
 
   return (
-    <div>
-      {/* Immediate client-rendered dashboard with minimal data for perceived speed */}
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <FacultyDashboardClient
         faculty={{
           name: profileInfo?.name ?? "",
@@ -56,30 +50,6 @@ export default async function FacultyDashboardPage() {
         studentCount={studentCount ?? 0}
         timetableSlots={timetableSlots ?? []}
       />
-
-      <div className="mx-auto max-w-6xl px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-        <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-slate-100" />}>
-          <FacultyProfile />
-        </Suspense>
-
-        <div className="space-y-6 mt-6">
-          <div className="grid gap-4 xl:grid-cols-4">
-            <Suspense fallback={<div className="h-24 animate-pulse rounded-xl bg-slate-100 col-span-4" />}>
-              <div className="rounded-[24px] border border-slate-200/80 bg-white/95 p-5 shadow-sm">Loading stats…</div>
-            </Suspense>
-          </div>
-
-          <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-            <Suspense fallback={<div className="rounded-3xl border border-slate-200 bg-slate-50 p-8 animate-pulse" />}>
-              <FacultyTimetable />
-            </Suspense>
-
-            <Suspense fallback={<div className="rounded-3xl border border-slate-200 bg-slate-50 p-8 animate-pulse" />}>
-              <FacultySubjects />
-            </Suspense>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

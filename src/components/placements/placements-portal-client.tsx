@@ -307,8 +307,8 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
   const isStudent = userRole.toLowerCase() === "student" || userRole.toLowerCase() === "parent";
 
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-slate-950/10 p-6 shadow-[0_40px_120px_-50px_rgba(99,102,241,0.18)] backdrop-blur-xl before:absolute before:inset-0 before:bg-[radial-gradient(circle_at_top_right,rgba(99,102,241,0.16),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(16,185,129,0.12),transparent_42%)] before:pointer-events-none">
-      <div className="relative space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="space-y-6">
         {isStudent ? (
           <StudentPortalView
             userName={userName}
@@ -323,68 +323,69 @@ export default function PlacementsPortalClient({ role: enforcedRole, defaultTab 
         ) : (
           <div className="space-y-6">
             {/* Tabs bar */}
-            <div className="border-b border-white/10 backdrop-blur-xl">
-              <nav className="flex space-x-6 overflow-x-auto no-scrollbar bg-slate-950/10 px-2 py-3 rounded-[1.5rem] shadow-[0_8px_30px_-18px_rgba(15,23,42,0.3)]">
-                {
-                  (() => {
-                    const roleKey = (userRole || "STUDENT").toLowerCase();
-                    let tabs: { id: TabType; label: string }[] = [];
+            <div className="bg-white/80 border border-slate-100 rounded-2xl p-1.5 shadow-[0_2px_8px_rgba(15,23,42,0.01)] backdrop-blur-md flex flex-wrap gap-1">
+              {
+                (() => {
+                  const roleKey = (userRole || "STUDENT").toLowerCase();
+                  let tabs: { id: TabType; label: string }[] = [];
 
-                    if (roleKey.includes("student") || roleKey.includes("parent")) {
-                      tabs = [
-                        { id: "predictor", label: "Placement Predictor" },
-                        { id: "drives", label: "Placement Drives" },
-                        { id: "interview", label: "Mock Interview" },
-                      ];
-                    } else if (roleKey.includes("faculty")) {
-                      tabs = [
-                        { id: "overview", label: "Overview" },
-                        { id: "students", label: "Students Database" },
-                        { id: "drives", label: "Drives" },
-                        { id: "predictor", label: "Placement Predictor" },
-                      ];
-                    } else if (roleKey.includes("institution") || roleKey.includes("org") || roleKey.includes("hod") || roleKey.includes("program")) {
-                      tabs = [
-                        { id: "overview", label: "Overview" },
-                        { id: "students", label: "Students Database" },
-                        { id: "companies", label: "Companies" },
-                        { id: "drives", label: "Drives" },
-                        { id: "predictor", label: "Placement Predictor" },
-                      ];
-                    } else if (roleKey.includes("super")) {
-                      tabs = [
-                        { id: "overview", label: "Overview" },
-                        { id: "students", label: "Students Database" },
-                        { id: "companies", label: "Companies" },
-                        { id: "drives", label: "Drives" },
-                        { id: "predictor", label: "Placement Predictor" },
-                        { id: "comms", label: "Communication Coach" },
-                        { id: "interview", label: "Mock Interview" },
-                      ];
-                    } else {
-                      tabs = [
-                        { id: "overview", label: "Overview" },
-                        { id: "companies", label: "Companies" },
-                        { id: "drives", label: "Drives" },
-                      ];
-                    }
+                  if (roleKey.includes("student") || roleKey.includes("parent")) {
+                    tabs = [
+                      { id: "predictor", label: "Placement Predictor" },
+                      { id: "drives", label: "Placement Drives" },
+                      { id: "interview", label: "Mock Interview" },
+                    ];
+                  } else if (roleKey.includes("faculty")) {
+                    tabs = [
+                      { id: "overview", label: "Overview" },
+                      { id: "students", label: "Students Database" },
+                      { id: "drives", label: "Drives" },
+                      { id: "predictor", label: "Placement Predictor" },
+                    ];
+                  } else if (roleKey.includes("institution") || roleKey.includes("org") || roleKey.includes("hod") || roleKey.includes("program")) {
+                    tabs = [
+                      { id: "overview", label: "Overview" },
+                      { id: "students", label: "Students Database" },
+                      { id: "companies", label: "Companies" },
+                      { id: "drives", label: "Drives" },
+                      { id: "predictor", label: "Placement Predictor" },
+                    ];
+                  } else if (roleKey.includes("super")) {
+                    tabs = [
+                      { id: "overview", label: "Overview" },
+                      { id: "students", label: "Students Database" },
+                      { id: "companies", label: "Companies" },
+                      { id: "drives", label: "Drives" },
+                      { id: "predictor", label: "Placement Predictor" },
+                      { id: "comms", label: "Communication Coach" },
+                      { id: "interview", label: "Mock Interview" },
+                    ];
+                  } else {
+                    tabs = [
+                      { id: "overview", label: "Overview" },
+                      { id: "companies", label: "Companies" },
+                      { id: "drives", label: "Drives" },
+                    ];
+                  }
 
-                    return tabs.map((tab) => (
+                  return tabs.map((tab) => {
+                    const active = activeTab === tab.id
+                    return (
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as TabType)}
-                        className={`py-3 px-4 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                          activeTab === tab.id
-                            ? "border border-violet-500/30 bg-violet-500/10 text-violet-200 shadow-sm"
-                            : "border border-transparent text-slate-400 hover:border-white/15 hover:bg-white/5 hover:text-slate-100"
+                        className={`flex-1 min-w-[120px] flex items-center justify-center py-2.5 px-4 rounded-xl font-bold text-xs transition-all duration-200 active:scale-95 ${
+                          active
+                            ? "bg-[#6C63FF] text-white shadow-md shadow-indigo-100"
+                            : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
                         }`}
                       >
                         {tab.label}
                       </button>
-                    ));
-                  })()
-                }
-              </nav>
+                    )
+                  });
+                })()
+              }
             </div>
 
             {/* Render Tab Contents */}
@@ -556,24 +557,27 @@ function StudentPortalView({
         <StatCard label={drives.length ? "Applied Openings" : "Active Drives"} value={drives.length ? studentApplications.length : "No active drives"} icon={<Award size={15} />} accent="bg-indigo-50 text-indigo-600" />
       </div>
 
-      <div className="flex bg-white/10 p-1 rounded-full shadow-[0_18px_40px_-28px_rgba(15,23,42,0.35)] w-fit backdrop-blur-xl">
+      <div className="bg-white/80 border border-slate-100 rounded-2xl p-1.5 shadow-[0_2px_8px_rgba(15,23,42,0.01)] backdrop-blur-md flex flex-wrap gap-1 w-fit">
         {[
           { id: "predictor", label: "Predictor & Insights" },
           { id: "drives", label: "Placement Drives" },
           { id: "interview", label: "Mock Interview Terminal" },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setSubTab(tab.id as any)}
-            className={`px-4 py-2 rounded-full text-xs font-semibold transition-all ${
-              subTab === tab.id
-                ? "bg-white/90 text-slate-950 shadow-sm"
-                : "text-slate-300 hover:bg-white/10 hover:text-slate-100"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
+        ].map((tab) => {
+          const active = subTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setSubTab(tab.id as any)}
+              className={`px-4 py-2.5 rounded-xl font-bold text-xs transition-all duration-200 active:scale-95 ${
+                active
+                  ? "bg-[#6C63FF] text-white shadow-md shadow-indigo-100"
+                  : "text-slate-500 hover:text-slate-800 hover:bg-slate-50"
+              }`}
+            >
+              {tab.label}
+            </button>
+          )
+        })}
       </div>
 
       {subTab === "predictor" && (

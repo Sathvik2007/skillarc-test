@@ -95,9 +95,10 @@ export default function LoginPage() {
             </div>
           </div>
           <button
+            type="button"
             onClick={handleLogin}
             disabled={loading}
-            className="mt-10 inline-flex w-full items-center justify-center rounded-3xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+            className="mt-10 inline-flex w-full cursor-pointer items-center justify-center rounded-3xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-400"
           >
             {loading ? "Signing in..." : "Sign in"}
           </button>
