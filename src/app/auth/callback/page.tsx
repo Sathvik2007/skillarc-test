@@ -14,26 +14,15 @@ export default function AuthCallbackPage() {
         setStatus("Verifying invite link...")
 
         const {
-          data: { session: urlSession },
-          error: urlError,
-        } = await supabase.auth.getSessionFromUrl()
-
-        if (urlError) {
-          console.warn("⚠️ No session created from invite callback via URL:", urlError)
-        }
-
-        const {
           data: { session },
-          error: sessionError,
+          error,
         } = await supabase.auth.getSession()
 
-        const activeSession = urlSession ?? session
-
-        if (sessionError) {
-          console.warn("⚠️ Session lookup error:", sessionError)
+        if (error) {
+          console.warn("⚠️ Callback session error:", error)
         }
 
-        if (!activeSession) {
+        if (!session) {
           console.warn("⚠️ No active session after invite callback")
           setStatus("Setting up your account...")
           router.replace("/auth/set-password")
