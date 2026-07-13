@@ -75,7 +75,9 @@ export async function inviteUser(params: {
       origin = resolveAppOrigin()
     }
   }
-  const redirectTo = `${origin}/auth/callback`
+  const redirectToUrl = new URL("/auth/callback", origin)
+  redirectToUrl.searchParams.set("inviteEmail", email)
+  const redirectTo = redirectToUrl.toString()
 
   const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers()
   if (listError) {

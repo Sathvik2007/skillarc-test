@@ -1,27 +1,43 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 import { ROLES } from "@/constants/roles"
 
 export default function SetPasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
   const [confirm, setConfirm] = useState("")
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle")
   const [error, setError] = useState("")
   const [userEmail, setUserEmail] = useState("")
+  const [inviteEmail, setInviteEmail] = useState<string | null>(null)
 
   useEffect(() => {
+    const emailFromQuery = searchParams.get("inviteEmail")
+    setInviteEmail(emailFromQuery)
+
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession()
-      if (session?.user?.email) {
-        setUserEmail(session.user.email)
+      const sessionEmail = session?.user?.email
+
+      if (sessionEmail) {
+        setUserEmail(sessionEmail)
+      }
+
+      if (emailFromQuery && sessionEmail && sessionEmail.toLowerCase() !== emailFromQuery.toLowerCase()) {
+        console.warn("⚠️ Set-password page session mismatch", { inviteEmail: emailFromQuery, sessionEmail })
+        setError("You are signed in as a different user than the invited email. Signing out and retrying...")
+        setStatus("error")
+        await supabase.auth.signOut()
+        router.replace(`/auth/callback?inviteEmail=${encodeURIComponent(emailFromQuery)}&retry=1`)
       }
     }
+
     getSession()
-  }, [])
+  }, [router, searchParams])
 
   async function handleSubmit() {
     if (password.length < 6) {
@@ -83,9 +99,14 @@ export default function SetPasswordPage() {
           <p className="mt-3 text-sm leading-6 text-slate-500">Create a secure password to activate your account and continue into SkillArc.</p>
         </div>
 
-        {userEmail && (
+        {(inviteEmail || userEmail) && (
           <div className="mb-6 rounded-3xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            Setting up: <span className="font-semibold text-slate-900">{userEmail}</span>
+            <p>Invited account: <span className="font-semibold text-slate-900">{inviteEmail ?? "Unknown"}</span></p>
+            {userEmail && (
+              <p>
+                Signed in as: <span className="font-semibold text-slate-900">{userEmail}</span>
+              </p>
+            )}
           </div>
         )}
 

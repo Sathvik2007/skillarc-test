@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { supabase } from "@/lib/supabase"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [status, setStatus] = useState("Loading...")
 
   useEffect(() => {
@@ -22,15 +23,43 @@ export default function AuthCallbackPage() {
           console.warn("⚠️ Callback session error:", error)
         }
 
+        const inviteEmail = searchParams.get("inviteEmail")
+        const retry = searchParams.get("retry")
+        const callbackQuery = inviteEmail ? `?inviteEmail=${encodeURIComponent(inviteEmail)}` : ""
+        const sessionEmail = session?.user?.email
+
+        if (inviteEmail && sessionEmail && sessionEmail.toLowerCase() !== inviteEmail.toLowerCase()) {
+          if (retry !== "1") {
+            console.warn(
+              "⚠️ Invite email mismatch detected, clearing the current session and retrying",
+              { inviteEmail, sessionEmail }
+            )
+            setStatus("Clearing previous session...")
+            await supabase.auth.signOut()
+            const currentUrl = window.location.href
+            const retryUrl = new URL(currentUrl)
+            retryUrl.searchParams.set("retry", "1")
+            window.location.replace(retryUrl.toString())
+            return
+          }
+
+          console.error(
+            "❌ Invite link came through with a mismatched session after retry.",
+            { inviteEmail, sessionEmail }
+          )
+          setStatus("Invite session mismatch. Please log in with the invited email.")
+          return
+        }
+
         if (!session) {
           console.warn("⚠️ No active session after invite callback")
           setStatus("Setting up your account...")
-          router.replace("/auth/set-password")
+          router.replace(`/auth/set-password${callbackQuery}`)
           return
         }
 
         setStatus("Redirecting...")
-        router.replace("/auth/set-password")
+        router.replace(`/auth/set-password${callbackQuery}`)
       } catch (err) {
         console.error("❌ Auth callback error:", err)
         setStatus("An error occurred")
@@ -39,7 +68,7 @@ export default function AuthCallbackPage() {
     }
 
     handleAuth()
-  }, [router])
+  }, [router, searchParams])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.16),_transparent_24%),radial-gradient(circle_at_bottom,_rgba(16,185,129,0.08),_transparent_20%),linear-gradient(180deg,#f8fbff,#eff6ff)] px-4 py-10">
