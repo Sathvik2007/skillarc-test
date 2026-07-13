@@ -33,7 +33,9 @@ export async function middleware(request: NextRequest) {
     pathname === "/login" ||
     pathname === "/signup" ||
     pathname === "/auth/login" ||
-    pathname === "/auth/signup"
+    pathname === "/auth/signup" ||
+    pathname === "/auth/callback" ||
+    pathname === "/auth/set-password"
 
   if (!user && !isAuthRoute) {
     return NextResponse.redirect(new URL("/auth/login", request.url))
