@@ -79,40 +79,7 @@ export async function inviteUser(params: {
   redirectToUrl.searchParams.set("inviteEmail", email)
   const redirectTo = redirectToUrl.toString()
 
-  const { data: existingUsers, error: listError } = await supabase.auth.admin.listUsers()
-  if (listError) {
-    console.error("🔴 Error listing users:", listError)
-    throw new Error("Failed to check existing users: " + listError.message)
-  }
-
-  const existing = existingUsers?.users?.find(u => u.email === email)
-
-  if (existing) {
-    console.log(`📧 User exists (${email}), upserting to users table with role: ${role}`)
-    const { error: upsertError } = await supabase.from("users").upsert({
-      id: existing.id,
-      email,
-      role,
-      institution_id: institutionId,
-      organization_id: organizationId,
-      name: email.split("@")[0], // Use email prefix as default name
-    }, { onConflict: "id" })
-    
-    if (upsertError) {
-      console.error("🔴 Upsert error:", upsertError)
-      throw new Error(upsertError.message)
-    }
-
-    const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, { redirectTo })
-    if (inviteError) {
-      console.error("🔴 Invite error:", inviteError)
-      throw new Error(inviteError.message)
-    }
-
-    return { success: true, message: "Existing user invited" }
-  }
-
-  console.log(`📧 Creating new invite for ${email} with role: ${role}`)
+  console.log(`📧 Inviting/re-inviting user ${email} with role: ${role}`)
   const { data, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, { redirectTo })
   if (inviteError) {
     console.error("🔴 Invite error:", inviteError)
@@ -120,22 +87,22 @@ export async function inviteUser(params: {
   }
 
   if (!data?.user?.id) {
-    throw new Error("Failed to create user")
+    throw new Error("Failed to invite user")
   }
 
-  console.log(`✅ User invited, inserting to users table with id: ${data.user.id}, role: ${role}`)
-  const { error: insertError } = await supabase.from("users").insert({
+  console.log(`✅ User invited, upserting to users table with id: ${data.user.id}, role: ${role}`)
+  const { error: upsertError } = await supabase.from("users").upsert({
     id: data.user.id,
     email,
     role,
     institution_id: institutionId,
     organization_id: organizationId,
     name: email.split("@")[0], // Use email prefix as default name
-  })
+  }, { onConflict: "id" })
 
-  if (insertError) {
-    console.error("🔴 Insert error:", insertError)
-    throw new Error(insertError.message)
+  if (upsertError) {
+    console.error("🔴 Upsert error in users table:", upsertError)
+    throw new Error(upsertError.message)
   }
 
   return { success: true, message: "Invitation sent successfully" }

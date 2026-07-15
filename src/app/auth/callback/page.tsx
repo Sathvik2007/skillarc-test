@@ -25,6 +25,18 @@ export default function AuthCallbackPage() {
 
     async function verifySession() {
       setStatus("Verifying invite link...")
+
+      const code = searchParams.get("code")
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        if (exchangeError) {
+          console.error("❌ Error exchanging code for session:", exchangeError)
+          setStatus(`Invite link verification failed: ${exchangeError.message}`)
+          redirected = true
+          return
+        }
+      }
+
       const {
         data: { session },
         error,
@@ -54,6 +66,7 @@ export default function AuthCallbackPage() {
           { inviteEmail, sessionEmail }
         )
         setStatus("Invite session mismatch. Please log in with the invited email.")
+        redirected = true
         return
       }
 
@@ -68,7 +81,7 @@ export default function AuthCallbackPage() {
     verifySession()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (subscription && session?.user) {
+      if (session?.user) {
         redirectToSetPassword()
       }
     })
