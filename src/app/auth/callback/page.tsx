@@ -28,11 +28,16 @@ export default function AuthCallbackPage() {
 
       const code = searchParams.get("code")
       if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+        const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
         if (exchangeError) {
           console.error("❌ Error exchanging code for session:", exchangeError)
           setStatus(`Invite link verification failed: ${exchangeError.message}`)
           redirected = true
+          return
+        }
+
+        if (exchangeData?.session) {
+          redirectToSetPassword()
           return
         }
       }
