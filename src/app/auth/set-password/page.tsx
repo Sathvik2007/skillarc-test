@@ -14,6 +14,8 @@ export default function SetPasswordPage() {
   const [error, setError] = useState("")
   const [userEmail, setUserEmail] = useState("")
   const [inviteEmail, setInviteEmail] = useState<string | null>(null)
+  const [sessionReady, setSessionReady] = useState(false)
+  const [hasSession, setHasSession] = useState(false)
 
   useEffect(() => {
     const emailFromQuery = searchParams.get("inviteEmail")
@@ -23,8 +25,17 @@ export default function SetPasswordPage() {
       const { data: { session } } = await supabase.auth.getSession()
       const sessionEmail = session?.user?.email
 
+      setSessionReady(true)
+      setHasSession(Boolean(session))
+
       if (sessionEmail) {
         setUserEmail(sessionEmail)
+      }
+
+      if (!session) {
+        setError("No active invite session was detected. Please open the invite link again in a browser where you are not signed in.")
+        setStatus("error")
+        return
       }
 
       if (emailFromQuery && sessionEmail && sessionEmail.toLowerCase() !== emailFromQuery.toLowerCase()) {
@@ -151,7 +162,7 @@ export default function SetPasswordPage() {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={status === "loading" || status === "success"}
+          disabled={status === "loading" || status === "success" || !sessionReady || !hasSession}
           className={
             `mt-8 w-full rounded-3xl px-4 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-400 ${
               status === "success"
@@ -161,7 +172,15 @@ export default function SetPasswordPage() {
             `
           }
         >
-          {status === "loading" ? "Saving…" : status === "success" ? "✓ Password Set" : "Set Password & Login"}
+          {status === "loading"
+            ? "Saving…"
+            : status === "success"
+            ? "✓ Password Set"
+            : !sessionReady
+            ? "Checking session…"
+            : !hasSession
+            ? "No active session"
+            : "Set Password & Login"}
         </button>
       </div>
     </div>
