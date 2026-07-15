@@ -42,7 +42,8 @@ export default function SetPasswordPage() {
         setError("You are signed in as a different user than the invited email. Signing out and retrying...")
         setStatus("error")
         await supabase.auth.signOut()
-        router.replace(`/auth/callback?inviteEmail=${encodeURIComponent(emailFromQuery)}&retry=1`)
+        // force a full navigation so the server middleware sees the cleared cookies
+        window.location.replace(`/auth/callback?inviteEmail=${encodeURIComponent(emailFromQuery)}&retry=1`)
         return
       }
 

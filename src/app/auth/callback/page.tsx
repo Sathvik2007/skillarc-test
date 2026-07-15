@@ -36,6 +36,20 @@ export default function AuthCallbackPage() {
       return false
     }
 
+    function parseHashSession() {
+      try {
+        const hash = window.location.hash || "" // e.g. #access_token=...&refresh_token=...
+        if (!hash) return null
+        const q = new URLSearchParams(hash.replace(/^#/, ""))
+        const access_token = q.get("access_token")
+        const refresh_token = q.get("refresh_token")
+        if (access_token) return { access_token, refresh_token }
+      } catch (e) {
+        console.debug("failed to parse hash for session", e)
+      }
+      return null
+    }
+
     async function verifySession() {
       setStatus("Verifying invite link...")
 
@@ -75,6 +89,21 @@ export default function AuthCallbackPage() {
           if (!persisted) {
             console.warn("⚠️ Session exchange succeeded but persisted session was not immediately available")
           }
+          redirectToSetPassword()
+          return
+        }
+      }
+
+      // Fallback: some magic-link flows put tokens in the URL hash (implicit grant)
+      const hashTokens = parseHashSession()
+      if (hashTokens) {
+        console.debug("Found tokens in hash, setting session via auth.setSession")
+        const { data: setData, error: setError } = await supabase.auth.setSession(hashTokens)
+        if (setError) {
+          console.error("❌ Failed to set session from hash:", setError)
+        } else {
+          const persisted = await waitForSessionPersistence()
+          if (!persisted) console.warn("⚠️ setSession succeeded but persisted session not immediately available")
           redirectToSetPassword()
           return
         }
