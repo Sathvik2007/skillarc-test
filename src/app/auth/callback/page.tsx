@@ -10,64 +10,88 @@ export default function AuthCallbackPage() {
   const [status, setStatus] = useState("Loading...")
 
   useEffect(() => {
-    async function handleAuth() {
-      try {
-        setStatus("Verifying invite link...")
+    let redirected = false
+    let retryAttempted = false
+    const inviteEmail = searchParams.get("inviteEmail")
+    const retry = searchParams.get("retry")
+    const callbackQuery = inviteEmail ? `?inviteEmail=${encodeURIComponent(inviteEmail)}` : ""
 
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSession()
-
-        if (error) {
-          console.warn("⚠️ Callback session error:", error)
-        }
-
-        const inviteEmail = searchParams.get("inviteEmail")
-        const retry = searchParams.get("retry")
-        const callbackQuery = inviteEmail ? `?inviteEmail=${encodeURIComponent(inviteEmail)}` : ""
-        const sessionEmail = session?.user?.email
-
-        if (inviteEmail && sessionEmail && sessionEmail.toLowerCase() !== inviteEmail.toLowerCase()) {
-          if (retry !== "1") {
-            console.warn(
-              "⚠️ Invite email mismatch detected, clearing the current session and retrying",
-              { inviteEmail, sessionEmail }
-            )
-            setStatus("Clearing previous session...")
-            await supabase.auth.signOut()
-            const currentUrl = window.location.href
-            const retryUrl = new URL(currentUrl)
-            retryUrl.searchParams.set("retry", "1")
-            window.location.replace(retryUrl.toString())
-            return
-          }
-
-          console.error(
-            "❌ Invite link came through with a mismatched session after retry.",
-            { inviteEmail, sessionEmail }
-          )
-          setStatus("Invite session mismatch. Please log in with the invited email.")
-          return
-        }
-
-        if (!session) {
-          console.warn("⚠️ No active session after invite callback")
-          setStatus("Setting up your account...")
-          router.replace(`/auth/set-password${callbackQuery}`)
-          return
-        }
-
-        setStatus("Redirecting...")
-        router.replace(`/auth/set-password${callbackQuery}`)
-      } catch (err) {
-        console.error("❌ Auth callback error:", err)
-        setStatus("An error occurred")
-        setTimeout(() => router.replace("/auth/login"), 2000)
-      }
+    const redirectToSetPassword = () => {
+      if (redirected) return
+      redirected = true
+      setStatus("Redirecting...")
+      router.replace(`/auth/set-password${callbackQuery}`)
     }
 
-    handleAuth()
+    async function verifySession() {
+      setStatus("Verifying invite link...")
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession()
+
+      if (error) {
+        console.warn("⚠️ Callback session error:", error)
+      }
+
+      const sessionEmail = session?.user?.email
+      if (inviteEmail && sessionEmail && sessionEmail.toLowerCase() !== inviteEmail.toLowerCase()) {
+        if (retry !== "1") {
+          console.warn(
+            "⚠️ Invite email mismatch detected, clearing the current session and retrying",
+            { inviteEmail, sessionEmail }
+          )
+          setStatus("Clearing previous session...")
+          await supabase.auth.signOut()
+          const currentUrl = new URL(window.location.href)
+          currentUrl.searchParams.set("retry", "1")
+          window.location.replace(currentUrl.toString())
+          return
+        }
+
+        console.error(
+          "❌ Invite link came through with a mismatched session after retry.",
+          { inviteEmail, sessionEmail }
+        )
+        setStatus("Invite session mismatch. Please log in with the invited email.")
+        return
+      }
+
+      if (session) {
+        redirectToSetPassword()
+        return
+      }
+
+      setStatus("Waiting for invite session...")
+    }
+
+    verifySession()
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (subscription && session?.user) {
+        redirectToSetPassword()
+      }
+    })
+
+    const fallbackTimer = window.setTimeout(async () => {
+      if (redirected) return
+      if (retry || retryAttempted) {
+        setStatus("Invite session not found. Open the invite link again in a fresh browser or private window.")
+        return
+      }
+
+      retryAttempted = true
+      if (!searchParams.get("retry")) {
+        const reloadUrl = new URL(window.location.href)
+        reloadUrl.searchParams.set("retry", "1")
+        window.location.replace(reloadUrl.toString())
+      }
+    }, 5000)
+
+    return () => {
+      subscription?.unsubscribe()
+      window.clearTimeout(fallbackTimer)
+    }
   }, [router, searchParams])
 
   return (

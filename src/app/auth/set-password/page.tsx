@@ -21,10 +21,9 @@ export default function SetPasswordPage() {
     const emailFromQuery = searchParams.get("inviteEmail")
     setInviteEmail(emailFromQuery)
 
-    async function getSession() {
-      const { data: { session } } = await supabase.auth.getSession()
+    let ready = false
+    const handleSession = async (session: any | null) => {
       const sessionEmail = session?.user?.email
-
       setSessionReady(true)
       setHasSession(Boolean(session))
 
@@ -33,7 +32,9 @@ export default function SetPasswordPage() {
       }
 
       if (!session) {
-        setError("No active invite session was detected. Please open the invite link again in a browser where you are not signed in.")
+        setError(
+          "No active invite session was detected. Please open the invite link again in a browser where you are not signed in."
+        )
         setStatus("error")
         return
       }
@@ -44,10 +45,24 @@ export default function SetPasswordPage() {
         setStatus("error")
         await supabase.auth.signOut()
         router.replace(`/auth/callback?inviteEmail=${encodeURIComponent(emailFromQuery)}&retry=1`)
+        return
       }
     }
 
+    async function getSession() {
+      const { data: { session } } = await supabase.auth.getSession()
+      ready = true
+      await handleSession(session)
+    }
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!ready) return
+      await handleSession(session)
+    })
+
     getSession()
+
+    return () => subscription?.unsubscribe()
   }, [router, searchParams])
 
   async function handleSubmit() {
