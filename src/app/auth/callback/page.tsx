@@ -23,10 +23,43 @@ export default function AuthCallbackPage() {
       router.replace(`/auth/set-password${callbackQuery}`)
     }
 
+    async function waitForSessionPersistence() {
+      for (let i = 0; i < 10; i += 1) {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+        if (session) {
+          return true
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 100))
+      }
+      return false
+    }
+
     async function verifySession() {
       setStatus("Verifying invite link...")
 
       const code = searchParams.get("code")
+
+      console.debug("auth callback params", {
+        code,
+        inviteEmail,
+        retry,
+      })
+      const {
+        data: { session: initialSession },
+        error: initialError,
+      } = await supabase.auth.getSession()
+
+      if (initialError) {
+        console.warn("⚠️ Callback session initialization error:", initialError)
+      }
+
+      if (initialSession) {
+        redirectToSetPassword()
+        return
+      }
+
       if (code) {
         const { data: exchangeData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
         if (exchangeError) {
@@ -37,6 +70,11 @@ export default function AuthCallbackPage() {
         }
 
         if (exchangeData?.session) {
+          setStatus("Establishing invite session...")
+          const persisted = await waitForSessionPersistence()
+          if (!persisted) {
+            console.warn("⚠️ Session exchange succeeded but persisted session was not immediately available")
+          }
           redirectToSetPassword()
           return
         }

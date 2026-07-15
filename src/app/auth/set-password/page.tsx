@@ -32,10 +32,8 @@ export default function SetPasswordPage() {
       }
 
       if (!session) {
-        setError(
-          "No active invite session was detected. Please open the invite link again in a browser where you are not signed in."
-        )
-        setStatus("error")
+        setStatus("idle")
+        setError("")
         return
       }
 
@@ -47,15 +45,20 @@ export default function SetPasswordPage() {
         router.replace(`/auth/callback?inviteEmail=${encodeURIComponent(emailFromQuery)}&retry=1`)
         return
       }
+
+      setStatus("idle")
+      setError("")
     }
 
     async function getSession() {
       const { data: { session } } = await supabase.auth.getSession()
+      console.debug("set-password initial getSession", { session })
       ready = true
       await handleSession(session)
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.debug("set-password onAuthStateChange", { event, session })
       if (!ready) return
       await handleSession(session)
     })
@@ -64,6 +67,23 @@ export default function SetPasswordPage() {
 
     return () => subscription?.unsubscribe()
   }, [router, searchParams])
+
+  useEffect(() => {
+    const fallbackTimer = window.setTimeout(() => {
+      if (!hasSession) {
+        setError(
+          "No active invite session was detected. Please open the invite link again in a browser where you are not signed in."
+        )
+        setStatus("error")
+      }
+    }, 5000)
+
+    return () => window.clearTimeout(fallbackTimer)
+  }, [hasSession])
+
+  useEffect(() => {
+    console.debug("set-password mounted", { inviteEmail })
+  }, [inviteEmail])
 
   async function handleSubmit() {
     if (password.length < 6) {
