@@ -98,7 +98,11 @@ export default function AuthCallbackPage() {
       const hashTokens = parseHashSession()
       if (hashTokens) {
         console.debug("Found tokens in hash, setting session via auth.setSession")
-        const { data: setData, error: setError } = await supabase.auth.setSession(hashTokens)
+        const payload = {
+          access_token: hashTokens.access_token,
+          refresh_token: hashTokens.refresh_token ?? "",
+        }
+        const { data: setData, error: setError } = await supabase.auth.setSession(payload)
         if (setError) {
           console.error("❌ Failed to set session from hash:", setError)
         } else {
